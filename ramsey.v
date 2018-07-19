@@ -9,7 +9,7 @@
 
 Require Import List Arith Omega Wellfounded.
 
-Require Import notations ramsey_paper.
+Require Import notations ramsey_paper af.
 
 Set Implicit Arguments.
 
@@ -32,18 +32,6 @@ Section Ramsey_Berardi_Coquand.
   Inductive Ar R : Prop :=
     | in_Ar_0 : (∀ x l, R (x::l) <-> R l) -> Ar R
     | in_Ar_1 : (∀ x, Ar (R⋅x)) -> Ar R.
-
-  (** HWF is an inductive characterization of Homogeneous Well-Founded *)
-
-  Inductive HWF R : Prop := 
-    | in_HWF_0 : (∀x, ~ R x)     -> HWF R
-    | in_HWF_1 : (∀x, HWF (R↓x)) -> HWF R.
-    
-  (** AF is an inductive characterization Almost Full *)
-
-  Inductive AF R : Prop := 
-    | in_AF_0 : (∀x, R x)      -> AF R
-    | in_AF_1 : (∀x, AF (R↑x)) -> AF R.
 
   (* Ar(ity) is an instance of Ultimately Stable *)
 

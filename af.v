@@ -1,0 +1,364 @@
+(**************************************************************)
+(*   Copyright Dominique Larchey-Wendling [*]                 *)
+(*                                                            *)
+(*                             [*] Affiliation LORIA -- CNRS  *)
+(**************************************************************)
+(*      This file is distributed under the terms of the       *)
+(*         CeCILL v2 FREE SOFTWARE LICENSE AGREEMENT          *)
+(**************************************************************)
+
+Require Import List Arith Omega.
+
+Require Import notations sublist utils.
+
+Set Implicit Arguments.
+
+Local Notation "A ⊆ B" := (∀x, A x -> B x).
+Local Notation "R ⋅ x" := (fun l => R (x::l)).
+Local Notation "R ↓ x" := (fun l => R l /\ R (x::l)).
+Local Notation "R ↑ x" := (fun l => R l \/ R (x::l)).
+
+Fact up_lift_mono X (R S : list X -> Prop) : R ⊆ S -> forall x, R↑x ⊆ S↑x.
+Proof. intros H x l; generalize (H l) (H (x::l)); tauto. Qed.
+
+Fact down_lift_mono X (R S : list X -> Prop) : R ⊆ S -> forall x, R↓x ⊆ S↓x.
+Proof. intros H x l; generalize (H l) (H (x::l)); tauto. Qed.
+
+Hint Resolve up_lift_mono down_lift_mono.
+
+Section HWF_AF_bar.
+
+  Variable (X : Type).
+
+  Implicit Type (R S : list X -> Prop).
+
+  (** HWF is an inductive characterization of Homogeneous Well-Founded *)
+
+  Inductive HWF R : Prop := 
+    | in_HWF_0 : (∀x, ~ R x)     -> HWF R
+    | in_HWF_1 : (∀x, HWF (R↓x)) -> HWF R.
+
+  Fact HWF_anti R S : S ⊆ R -> HWF R -> HWF S.
+  Proof.
+    intros H1 H2; revert H2 S H1. 
+    induction 1 as [ | R HR IHR ]; intros S HS; 
+      [ constructor 1 | constructor 2 ]; auto.
+    * intros l Hl; apply (H l); auto.
+    * intros x; apply (IHR x), down_lift_mono; auto.
+  Qed.
+    
+  (** AF is an inductive characterization Almost Full *)
+
+  Inductive AF R : Prop := 
+    | in_AF_0 : (∀x, R x)      -> AF R
+    | in_AF_1 : (∀x, AF (R↑x)) -> AF R.
+
+  Fact AF_mono R S : R ⊆ S -> AF R -> AF S.
+  Proof.
+    intros H1 H2; revert H2 S H1. 
+    induction 1 as [ | R HR IHR ]; intros S HS; 
+      [ constructor 1 | constructor 2 ]; auto.
+    intros x; apply (IHR x), up_lift_mono; auto. 
+  Qed.
+
+  Inductive bar R l : Prop :=
+    | in_bar_0 : R l -> bar R l
+    | in_bar_1 : (forall x, bar R (x::l)) -> bar R l.
+
+  Fact bar_mono R S : R ⊆ S -> bar R ⊆ bar S.
+  Proof. induction 2; [ constructor 1 | constructor 2 ]; auto. Qed.
+
+  Fact bar_inv R l : bar R l -> R l \/ (forall x, bar R (x::l)).
+  Proof. induction 1; auto. Qed.
+
+  Section bar_lift.
+
+    Variables (P : list X -> Prop).
+
+    Let bar_lift1 k : bar P k -> forall u v, k = v++u -> bar (fun v => P (v++u)) v.
+    Proof.
+      induction 1 as [ l Hl | l Hl IHl ]; intros u v ?; subst.
+      * apply in_bar_0; auto.
+      * apply in_bar_1; intros a.
+        apply (IHl a); auto.
+    Qed.
+  
+    Let bar_lift2 u v : bar (fun v => P (v++u)) v -> bar P (v++u).
+    Proof.
+      induction 1 as [ l Hl | l Hl IHl ].
+      * apply in_bar_0; auto.
+      * apply in_bar_1; apply IHl.
+    Qed.
+
+    Theorem bar_lift u : bar P u <-> bar (fun v => P (v++u)) nil.
+    Proof.
+      split.
+      * intro H; apply bar_lift1 with (1 := H); auto.
+      * apply bar_lift2.
+    Qed.
+
+    Hypothesis HP : forall x l, P l -> P (x::l).
+
+    Theorem bar_nil : bar P nil <-> forall l, bar P l.
+    Proof.
+      split; auto.
+      intros H l; rewrite app_nil_end; revert H.
+      generalize (@nil X); intros m H.
+      induction l as [ | x l IHl ]; auto.
+      apply bar_inv in IHl; destruct IHl; simpl; auto.
+      apply in_bar_0, HP; auto.
+    Qed.
+
+  End bar_lift.
+
+  Theorem bar_snoc P x l : bar P (l++x::nil) <-> bar (fun v => P (v++x::nil)) l.
+  Proof.
+    rewrite bar_lift, (bar_lift _ l).
+    split; apply bar_mono; intro; rewrite app_ass; auto.
+  Qed.
+
+End HWF_AF_bar.
+
+(** Symbols for copy/paste: ∩ ∪ ⊆ ⊇ ⊔ ⊓ ⊑ ≡  ⋅ ↑ ↓ ⇑ ⇓ ∀ ∃ *)
+
+Section bar_relmap.
+
+  Variables (X Y : Type) (f : X -> Y -> Prop) 
+            (R : list X -> Prop) (S : list Y -> Prop)
+            (Hf : ∀ y, exists x, f x y)                  (* f is surjective *)
+            (HRS : ∀ l m, Forall2 f l m -> R l -> S m).  (* f is a morphism form R to S *)
+
+  Theorem bar_relmap l m : Forall2 f l m -> bar R l -> bar S m.
+  Proof.
+    intros H1 H2; revert H2 m H1 S HRS.
+    induction 1 as [ l Hl | l Hl IHl ]; intros m H1 S HRS.
+    * constructor 1; revert Hl; apply HRS; auto.
+    * constructor 2; intros y.
+      destruct (Hf y) as (x & Hx).
+      apply (IHl x); auto.
+  Qed.
+    
+End bar_relmap.
+
+Section rel_lift.
+
+  Variable X : Type.
+  
+  Implicit Type (R S : list X -> Prop).
+
+  Fixpoint rel_llift R l :=
+    match l with
+      | nil  => R
+      | x::l => (R⇑l)↑x
+    end
+  where "R ⇑ l" := (rel_llift R l).
+
+  Fact rel_llift_app R l m : R⇑(l++m) = R⇑m⇑l.
+  Proof. induction l; simpl; auto; rewrite IHl; auto. Qed.
+ 
+  Fact rel_llift_mono R S : R ⊆ S -> forall l, R⇑l ⊆ S⇑l.
+  Proof.
+    intros H l; revert R S H; induction l; simpl; intros R S H; auto.
+    apply up_lift_mono, IHl; auto.
+  Qed.
+  
+  Fact rel_llift_sl R l m : rel_llift R l m <-> exists k, k <sl l /\ R (rev k++m).
+  Proof.
+    revert m R.
+    induction l as [ | x l IHl ]; intros m R; simpl.
+    * split.
+      + exists nil; split; auto; constructor.
+      + intros (l & H1 & H2).
+        apply sublist_nil_inv in H1; subst; auto.
+    * do 2 rewrite IHl; split.
+      + intros [ (k & H1 & H2) | (k & H1 & H2) ].
+        - exists k; split; auto; constructor; auto.
+        - exists (x::k); split.
+          ** constructor; auto.
+          ** simpl; rewrite app_ass; auto.
+      + intros (k & H1 & H2).
+        apply sublist_cons_inv_rt in H1.
+        destruct H1 as [ H1 | (k' & H1 & H3) ].
+        - left; exists k; auto.
+        - subst; right; exists k'; split; auto.
+          revert H2; simpl; rewrite app_ass; auto.
+  Qed.
+
+End rel_lift.
+  
+Arguments rel_llift {X}.
+Notation "R ⇑ l" := (rel_llift R l).
+
+(** Symbols for copy/paste: ∩ ∪ ⊆ ⊇ ⊔ ⊓ ⊑ ≡  ⋅ ↑ ↓ ⇑ ⇓ ∀ ∃ *)
+
+Section AF_bar.
+
+  Variable (X : Type).
+  
+  Implicit Type (R S : list X -> Prop).
+  
+  (* This seems to be a good definition of good 
+     Can we find an equivalent inductive characterization ? *)
+  
+  Definition good R l := ∀m, exists k, k <sl l /\ R (rev k++m).
+  
+  Fact good_rel_llift_eq R l : good R l <-> ∀m, (R⇑l) m.
+  Proof. split; intros H m; apply rel_llift_sl; auto. Qed.
+  
+  Fact good_nil R : (∀l, R l) -> good R nil.
+  Proof. rewrite good_rel_llift_eq; auto. Qed.
+  
+  Fact good_snoc R x l : good (R↑x) l -> good R (l++x::nil).
+  Proof.
+    do 2 rewrite good_rel_llift_eq.
+    intros H1 m.
+    rewrite rel_llift_app; apply H1.
+  Qed.
+  
+  Fact good_mono R S : R ⊆ S -> good R ⊆ good S.
+  Proof.
+    intros H1 l H2 m; generalize (H2 m).
+    intros (k & H3 & H4); exists k; split; auto.
+  Qed.
+  
+  Fact good_app R ll mm : good (R⇑mm) ll -> good R (ll ++ mm).
+  Proof.
+    revert R; induction mm as [ | x mm IHmm ] using list_snoc_ind; intros R; simpl.
+    * rewrite <- app_nil_end; auto.
+    * intros H.
+      rewrite <- app_ass.
+      apply good_snoc, IHmm.
+      revert H; apply good_mono.
+      rewrite rel_llift_app; simpl; auto.
+  Qed. 
+  
+  Fact good_app_left R l m : good R m -> good R (l++m).
+  Proof.
+    intros H p.
+    destruct (H p) as (k & H1 & H2).
+    exists k; split; auto.
+    apply sl_trans with (1 := H1), sl_app_left.
+  Qed.
+
+  Fact good_cons R x l : good R l -> good R (x::l).
+  Proof. apply good_app_left with (l := _::nil). Qed.
+
+  Fact good_app_right R l m : good R l -> good R (l++m).
+  Proof.
+    intros H p.
+    destruct (H p) as (k & H1 & H2).
+    exists k; split; auto.
+    apply sl_trans with (1 := H1), sl_app_right.
+  Qed.
+
+  Fact bar_good_nil R : bar (good R) nil <-> ∀l, bar (good R) l.
+  Proof. apply bar_nil, good_cons. Qed.
+
+  Section AF_bar.
+
+    Let AF_bar_rec R : AF R -> ∀ l S, R ⊆ S⇑l -> bar (good S) l.
+    Proof.
+      induction 1 as [ R HR | R HR IHR ]; intros l S HS.
+      * apply in_bar_0.
+        apply good_app with (ll := nil), good_mono with (1 := HS), good_nil, HR.
+      * apply in_bar_1; intros x.
+        apply (IHR x (x::l)), up_lift_mono, HS.
+    Qed.
+  
+    Let bar_AF R l : bar (good R) l -> AF (R⇑l).
+    Proof.
+      induction 1 as [ l Hl | l Hl IHl ].
+      * constructor 1; apply good_rel_llift_eq, Hl.
+      * constructor 2; apply IHl.
+    Qed.
+  
+    Theorem AF_bar_lift_eq R l : AF (R⇑l) <-> bar (good R) l.
+    Proof.
+      split.
+      * intros H; apply AF_bar_rec with (1 := H); auto.
+      * apply bar_AF.
+    Qed.
+
+  End AF_bar.
+  
+  Corollary AF_bar_eq R : AF R <-> bar (good R) nil.
+  Proof. apply AF_bar_lift_eq with (l := nil). Qed.
+
+  Corollary bar_rel_llift R l : bar (good R) l <-> bar (good (R⇑l)) nil.
+  Proof. rewrite <- AF_bar_lift_eq, AF_bar_eq; tauto. Qed.
+
+  (* R is k-ary strict if R l holds iff l is
+     of the form m++r where length m = k and R m *) 
+  
+  Fixpoint kary_strict k R :=
+    match k with 
+      | 0   => ∀x, R x <-> R nil
+      | S k => ~ R nil /\ forall x, kary_strict k (R⋅x)
+    end.
+    
+  Theorem kary_strict_prefix k R m l : kary_strict k R -> k <= length m -> R m <-> R (m++l).
+  Proof.
+    revert R m l; induction k as [ | k IHk ]; simpl; intros R m l H1 H2.
+    * rewrite (H1 m), (H1 (m++l)); auto.
+    * destruct H1 as [ H1 H3 ].
+      destruct m as [ | x m ].
+      { simpl in H2; omega. }
+      simpl in H2; apply le_S_n in H2.
+      apply IHk with (1 := H3 x); auto.
+  Qed.
+  
+  Theorem kary_strict_length k R l : kary_strict k R -> R l -> k <= length l.
+  Proof.
+    revert R l; induction k as [ | k IHk ]; simpl; intros R l.
+    * omega.
+    * intros (H1 & H2) H3.
+      destruct l as [ | x l ].
+      { destruct H1; auto. }
+      apply IHk with (1 := (H2 x)) in H3; auto.
+      simpl; omega.
+  Qed.
+  
+  (* For a strict kary relation, we have a simpler definition of good *)
+      
+  Theorem good_kary_strict k R l : 
+      kary_strict k R -> good R l <-> exists m, m <sl l /\ R (rev m) /\ length m = k.
+  Proof.
+(*
+    intros H; split.
+    * intros H1.
+      destruct (H1 nil) as (m & H2 & H3).
+      rewrite <- app_nil_end in H3.
+      assert (k <= length m) as Hm.
+      { rewrite <- rev_length.
+        apply kary_strict_length with (1 := H); auto. } 
+      destruct list_split_second_half with (1 := Hm) as (m1 & m2 & H4 & H5).
+      exists m2; repeat split; auto.
+      + apply sl_trans with (2 := H2); subst.
+        apply sl_app_left.
+      + rewrite kary_strict_prefix with (l := rev m1) (5 := H).
+        - rewrite <- rev_app_distr; subst; auto.
+        - rewrite rev_length; subst; auto.
+    * intros (m & H1 & H2 & H3).
+      revert R l m H H1 H2 H3.
+      induction k as [ | k IHk ]; simpl; intros R l m H H1 H2 H3 p.
+      + exists nil; split.
+        - constructor.
+        - simpl; revert H2; rewrite (H (rev _)), (H p); auto.
+      + destruct H as (H0 & H).
+        destruct (list_snoc_destruct m) as [ (x & m' & Hm) | Hm ].
+        2: subst; discriminate.
+        subst.
+        rewrite rev_app_distr in H2; simpl in H2.
+        rewrite app_length in H3; simpl in H3.
+        assert (length m' = k) as H3' by omega.
+        clear H3; rename H3' into H3.
+        apply sublist_app_inv_lft in H1.
+        destruct H1 as (l1 & l2 & H1 & H4 & H5).
+        destruct (IHk _ _ _ (H x) H4 H2 H3 p) as (q & G1 & G2).
+        exists (q++x::nil); split.
+        - subst; apply sl_app; auto.
+        - rewrite rev_app_distr; simpl; auto.
+  Qed. *)
+  Admitted.
+
+End AF_bar.
