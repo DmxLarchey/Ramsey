@@ -235,6 +235,7 @@ Arguments rel_dlift {X}.
 Notation "R ⇑ l" := (rel_ulift R l).
 Notation "R ⇓ l" := (rel_dlift R l).
 
+
 (** Symbols for copy/paste: ∩ ∪ ⊆ ⊇ ⊔ ⊓ ⊑ ≡  ⋅ ↑ ↓ ⇑ ⇓ ∀ ∃ *)
 
 Section good.
