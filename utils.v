@@ -9,6 +9,8 @@
 
 Require Import List Arith Omega Wellfounded.
 
+Set Implicit Arguments.
+
 Theorem measure_rect X (m : X -> nat) (P : X -> Type) :
       (forall x, (forall y, m y < m x -> P y) -> P x) -> forall x, P x.
 Proof. 
@@ -47,3 +49,41 @@ Proof.
   * right; auto.
   * left; exists x, l; auto.
 Qed.
+
+Definition app_split X (l1 : list X) : forall l2 r1 r2, l1++r1 = l2++r2
+                                      -> { m | l2 = l1++m /\ r1 = m++r2 }
+                                       + { m | l1 = l2++m /\ r2 = m++r1 }.
+Proof.
+  induction l1 as [ | x l1 Hl1 ].
+  left; exists l2; auto.
+  intros [ | y l2 ] r1 r2 H.
+  right; exists (x::l1); auto.
+  simpl in H; injection H; clear H; intros H ?; subst.
+  apply Hl1 in H.
+  destruct H as [ (m & H1 & H2) | (m & H1 & H2) ].
+  left; exists m; subst; auto.
+  right; exists m; subst; auto.
+Qed.
+
+Fact list_split_first_half U (ll : list U) x : x <= length ll -> { l : _ & { r | ll = l++r /\ length l = x } }.
+Proof.
+  revert ll; induction x as [ | x IHx ]; intros [ | u ll ] Hx.
+  exists nil, nil; simpl; auto.
+  exists nil, (u::ll); auto.
+  simpl in Hx; omega.
+  destruct (IHx ll) as (l & r & H1 & H2).
+  simpl in Hx; omega.
+  exists (u::l), r; simpl; split; f_equal; auto.
+Qed.
+    
+Fact list_split_second_half U (ll : list U) x : x <= length ll -> { l : _ & { r | ll = l++r /\ length r = x } }.
+Proof.
+  intros Hx.
+  destruct list_split_first_half with (ll := ll) (x := length ll - x)
+    as (l & r & H1 & H2).
+  omega.
+  exists l, r; split; auto.
+  apply f_equal with (f := @length _) in H1.
+  rewrite app_length in H1.
+  omega.
+Qed.  

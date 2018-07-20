@@ -146,23 +146,23 @@ Section rel_lift.
   
   Implicit Type (R S : list X -> Prop).
 
-  Fixpoint rel_llift R l :=
+  Fixpoint rel_ulift R l :=
     match l with
       | nil  => R
       | x::l => (R⇑l)↑x
     end
-  where "R ⇑ l" := (rel_llift R l).
+  where "R ⇑ l" := (rel_ulift R l).
 
-  Fact rel_llift_app R l m : R⇑(l++m) = R⇑m⇑l.
+  Fact rel_ulift_app R l m : R⇑(l++m) = R⇑m⇑l.
   Proof. induction l; simpl; auto; rewrite IHl; auto. Qed.
  
-  Fact rel_llift_mono R S : R ⊆ S -> forall l, R⇑l ⊆ S⇑l.
+  Fact rel_ulift_mono R S : R ⊆ S -> forall l, R⇑l ⊆ S⇑l.
   Proof.
     intros H l; revert R S H; induction l; simpl; intros R S H; auto.
     apply up_lift_mono, IHl; auto.
   Qed.
   
-  Fact rel_llift_sl R l m : rel_llift R l m <-> exists k, k <sl l /\ R (rev k++m).
+  Fact rel_ulift_sl R l m : (R⇑l) m <-> exists k, k <sl l /\ R (rev k++m).
   Proof.
     revert m R.
     induction l as [ | x l IHl ]; intros m R; simpl.
@@ -184,14 +184,60 @@ Section rel_lift.
           revert H2; simpl; rewrite app_ass; auto.
   Qed.
 
+  Fixpoint rel_dlift R l :=
+    match l with
+      | nil  => R
+      | x::l => (R⇓l)↓x
+    end
+  where "R ⇓ l" := (rel_dlift R l).
+
+  Fact rel_dlift_app R l m : R⇓(l++m) = R⇓m⇓l.
+  Proof. induction l; simpl; auto; rewrite IHl; auto. Qed.
+ 
+  Fact rel_dlift_mono R S : R ⊆ S -> forall l, R⇓l ⊆ S⇓l.
+  Proof.
+    intros H l; revert R S H; induction l; simpl; intros R S H; auto.
+    apply down_lift_mono, IHl; auto.
+  Qed.
+  
+  Fact rel_dlift_sl R l m : (R⇓l) m <-> forall k, k <sl l -> R (rev k++m).
+  Proof.
+    revert m R.
+    induction l as [ | x l IHl ]; intros m R; simpl.
+    * split.
+      + intros H k Hk.
+        apply sublist_nil_inv in Hk; subst; auto.
+      + intros H; apply (H nil); constructor.
+    * do 2 rewrite IHl; split.
+      + intros (H1 & H2) k Hk.
+        apply sublist_cons_inv_rt in Hk.
+        destruct Hk as [ Hk | (p & H3 & H4) ]; auto.
+        subst; simpl; rewrite app_ass; auto.
+      + intros H; split; intros k Hk.
+        - apply H; constructor 3; auto.
+        - replace (rev k++x::m) with (rev (x::k)++m).
+          apply H; constructor 2; auto.
+          simpl; rewrite app_ass; auto.
+  Qed.
+
+  Fact rel_dlift_sl_not R l m : ((fun l => ~ R l)⇓l) m <-> ~ exists k, k <sl l /\ R (rev k++m).
+  Proof.
+    rewrite rel_dlift_sl; split.
+    + intros H (k & H1 & H2); revert H2; apply H; auto.
+    + intros H k Hk; contradict H; exists k; auto.
+  Qed.
+
 End rel_lift.
   
-Arguments rel_llift {X}.
-Notation "R ⇑ l" := (rel_llift R l).
+Arguments rel_ulift {X}.
+Arguments rel_dlift {X}.
+
+Notation "R ⇑ l" := (rel_ulift R l).
+Notation "R ⇓ l" := (rel_dlift R l).
 
 (** Symbols for copy/paste: ∩ ∪ ⊆ ⊇ ⊔ ⊓ ⊑ ≡  ⋅ ↑ ↓ ⇑ ⇓ ∀ ∃ *)
 
-Section AF_bar.
+Section good.
 
   Variable (X : Type).
   
@@ -202,17 +248,17 @@ Section AF_bar.
   
   Definition good R l := ∀m, exists k, k <sl l /\ R (rev k++m).
   
-  Fact good_rel_llift_eq R l : good R l <-> ∀m, (R⇑l) m.
-  Proof. split; intros H m; apply rel_llift_sl; auto. Qed.
+  Fact good_rel_ulift_eq R l : good R l <-> ∀m, (R⇑l) m.
+  Proof. split; intros H m; apply rel_ulift_sl; auto. Qed.
   
   Fact good_nil R : (∀l, R l) -> good R nil.
-  Proof. rewrite good_rel_llift_eq; auto. Qed.
+  Proof. rewrite good_rel_ulift_eq; auto. Qed.
   
   Fact good_snoc R x l : good (R↑x) l -> good R (l++x::nil).
   Proof.
-    do 2 rewrite good_rel_llift_eq.
+    do 2 rewrite good_rel_ulift_eq.
     intros H1 m.
-    rewrite rel_llift_app; apply H1.
+    rewrite rel_ulift_app; apply H1.
   Qed.
   
   Fact good_mono R S : R ⊆ S -> good R ⊆ good S.
@@ -229,7 +275,7 @@ Section AF_bar.
       rewrite <- app_ass.
       apply good_snoc, IHmm.
       revert H; apply good_mono.
-      rewrite rel_llift_app; simpl; auto.
+      rewrite rel_ulift_app; simpl; auto.
   Qed. 
   
   Fact good_app_left R l m : good R m -> good R (l++m).
@@ -268,7 +314,7 @@ Section AF_bar.
     Let bar_AF R l : bar (good R) l -> AF (R⇑l).
     Proof.
       induction 1 as [ l Hl | l Hl IHl ].
-      * constructor 1; apply good_rel_llift_eq, Hl.
+      * constructor 1; apply good_rel_ulift_eq, Hl.
       * constructor 2; apply IHl.
     Qed.
   
@@ -284,8 +330,49 @@ Section AF_bar.
   Corollary AF_bar_eq R : AF R <-> bar (good R) nil.
   Proof. apply AF_bar_lift_eq with (l := nil). Qed.
 
-  Corollary bar_rel_llift R l : bar (good R) l <-> bar (good (R⇑l)) nil.
+  Corollary bar_rel_ulift R l : bar (good R) l <-> bar (good (R⇑l)) nil.
   Proof. rewrite <- AF_bar_lift_eq, AF_bar_eq; tauto. Qed.
+
+  (* Homogeneous, what about homogeneous for strict k-ary relations ? *)
+
+  Definition homo S l := exists m, forall k : list X, k <sl l -> S (rev k++m).
+
+  Section HWF_bar.
+
+    Let HWF_bar_rec R : HWF R -> ∀ l S, S⇓l ⊆ R -> bar (fun x => ~ homo S x) l.
+    Proof.
+      induction 1 as [ R HR | R HR IHR ]; intros l S HS.
+      * apply in_bar_0.
+        assert (forall x, ~ (S⇓l) x) as H.
+        { intros x Hx; apply (HR x); auto. }
+        intros (m & Hm); apply (H m).
+        rewrite rel_dlift_sl; auto.
+      * apply in_bar_1; intros x.
+        apply (IHR x).
+        intros m []; split; auto.
+    Qed.
+
+    Let bar_HWF R l : bar (fun x => ~ homo R x) l -> HWF (R⇓l).
+    Proof.
+      induction 1 as [ l Hl | l Hl IHl ].
+      * constructor 1; intros x.
+        contradict Hl.
+        exists x; rewrite <- rel_dlift_sl; auto.
+      * constructor 2; intros; apply IHl.
+    Qed.
+
+    Theorem HWF_bar_lift_eq R l : HWF (R⇓l) <-> bar (fun x => ~ homo R x) l.
+    Proof.
+      split; auto.
+      intros H; apply HWF_bar_rec with (R := R⇓l); auto. 
+    Qed.
+
+  End HWF_bar.
+
+  (* HWF means bound to become non-homegeneous *)
+
+  Corollary HWF_bar_eq R : HWF R <-> bar (fun x => ~ homo R x) nil.
+  Proof. apply HWF_bar_lift_eq with (l := nil). Qed.
 
   (* R is k-ary strict if R l holds iff l is
      of the form m++r where length m = k and R m *) 
@@ -323,7 +410,6 @@ Section AF_bar.
   Theorem good_kary_strict k R l : 
       kary_strict k R -> good R l <-> exists m, m <sl l /\ R (rev m) /\ length m = k.
   Proof.
-(*
     intros H; split.
     * intros H1.
       destruct (H1 nil) as (m & H2 & H3).
@@ -335,7 +421,7 @@ Section AF_bar.
       exists m2; repeat split; auto.
       + apply sl_trans with (2 := H2); subst.
         apply sl_app_left.
-      + rewrite kary_strict_prefix with (l := rev m1) (5 := H).
+      + rewrite kary_strict_prefix with (l := rev m1) (1 := H).
         - rewrite <- rev_app_distr; subst; auto.
         - rewrite rev_length; subst; auto.
     * intros (m & H1 & H2 & H3).
@@ -358,7 +444,27 @@ Section AF_bar.
         exists (q++x::nil); split.
         - subst; apply sl_app; auto.
         - rewrite rev_app_distr; simpl; auto.
-  Qed. *)
-  Admitted.
+  Qed.
 
+  (* For a strict kary relation, we have a simpler definition of homogeneous *)
+
+  Theorem homo_kary_strict k R l :
+      kary_strict k R -> homo R l <-> (exists m, R (rev l++m))
+                                   /\ forall m, m <sl l -> length m = k -> R (rev m).
+  Proof.
+    intros H; split.
+    * intros (m & Hm); split.
+      + exists m; apply Hm, sl_refl.
+      + intros x H1 H2.
+        rewrite (kary_strict_prefix R (rev x) m H); auto.
+        rewrite rev_length, H2; auto.
+    * intros ((m & Hm) & H1); red.
+      generalize (kary_strict_length _ _ _ H Hm); intros H2.
+
+    (* probably false *)
+  Admitted.
+ 
 End AF_bar.
+
+Section HWF_bar.
+
