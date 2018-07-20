@@ -125,7 +125,7 @@ Section bar_relmap.
 
   Variables (X Y : Type) (f : X -> Y -> Prop) 
             (R : list X -> Prop) (S : list Y -> Prop)
-            (Hf : ∀ y, exists x, f x y)                  (* f is surjective *)
+            (Hf : ∀y, ∃x, f x y)                  (* f is surjective *)
             (HRS : ∀ l m, Forall2 f l m -> R l -> S m).  (* f is a morphism form R to S *)
 
   Theorem bar_relmap l m : Forall2 f l m -> bar R l -> bar S m.
@@ -162,7 +162,7 @@ Section rel_lift.
     apply up_lift_mono, IHl; auto.
   Qed.
   
-  Fact rel_ulift_sl R l m : (R⇑l) m <-> exists k, k <sl l /\ R (rev k++m).
+  Fact rel_ulift_sl R l m : (R⇑l) m <-> ∃k, k <sl l /\ R (rev k++m).
   Proof.
     revert m R.
     induction l as [ | x l IHl ]; intros m R; simpl.
@@ -194,13 +194,13 @@ Section rel_lift.
   Fact rel_dlift_app R l m : R⇓(l++m) = R⇓m⇓l.
   Proof. induction l; simpl; auto; rewrite IHl; auto. Qed.
  
-  Fact rel_dlift_mono R S : R ⊆ S -> forall l, R⇓l ⊆ S⇓l.
+  Fact rel_dlift_mono R S : R ⊆ S -> ∀l, R⇓l ⊆ S⇓l.
   Proof.
     intros H l; revert R S H; induction l; simpl; intros R S H; auto.
     apply down_lift_mono, IHl; auto.
   Qed.
   
-  Fact rel_dlift_sl R l m : (R⇓l) m <-> forall k, k <sl l -> R (rev k++m).
+  Fact rel_dlift_sl R l m : (R⇓l) m <-> ∀k, k <sl l -> R (rev k++m).
   Proof.
     revert m R.
     induction l as [ | x l IHl ]; intros m R; simpl.
@@ -220,7 +220,7 @@ Section rel_lift.
           simpl; rewrite app_ass; auto.
   Qed.
 
-  Fact rel_dlift_sl_not R l m : ((fun l => ~ R l)⇓l) m <-> ~ exists k, k <sl l /\ R (rev k++m).
+  Fact rel_dlift_sl_not R l m : ((fun l => ~ R l)⇓l) m <-> ~ ∃k, k <sl l /\ R (rev k++m).
   Proof.
     rewrite rel_dlift_sl; split.
     + intros H (k & H1 & H2); revert H2; apply H; auto.
@@ -246,7 +246,7 @@ Section good.
   (* This seems to be a good definition of good 
      Can we find an equivalent inductive characterization ? *)
   
-  Definition good R l := ∀m, exists k, k <sl l /\ R (rev k++m).
+  Definition good R l := ∀m, ∃k, k <sl l /\ R (rev k++m).
   
   Fact good_rel_ulift_eq R l : good R l <-> ∀m, (R⇑l) m.
   Proof. split; intros H m; apply rel_ulift_sl; auto. Qed.
@@ -335,7 +335,7 @@ Section good.
 
   (* Homogeneous, what about homogeneous for strict k-ary relations ? *)
 
-  Definition homo S l := exists m, forall k : list X, k <sl l -> S (rev k++m).
+  Definition homo S l := ∃m, ∀x, x <sl l -> S (rev x++m).
 
   Section HWF_bar.
 
@@ -408,7 +408,7 @@ Section good.
   (* For a strict kary relation, we have a simpler definition of good *)
       
   Theorem good_kary_strict k R l : 
-      kary_strict k R -> good R l <-> exists m, m <sl l /\ R (rev m) /\ length m = k.
+      kary_strict k R -> good R l <-> ∃m, m <sl l /\ R (rev m) /\ length m = k.
   Proof.
     intros H; split.
     * intros H1.
@@ -464,7 +464,6 @@ Section good.
     (* probably false *)
   Admitted.
  
-End AF_bar.
+End good.
 
-Section HWF_bar.
 

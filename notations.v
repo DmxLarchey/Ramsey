@@ -13,7 +13,10 @@
 
 Notation "∀ x : t , P" := (forall x:t, P) (at level 200, x ident, only parsing).
 Notation "∀ x .. y , P" := (forall x, .. (forall y , P) ..)
-  (at level 200, x binder, right associativity, only parsing ): type_scope.
+  (at level 200, x binder, right associativity, only parsing): type_scope.
+
+Notation "∃ x .. y , P" := (ex (fun x => .. (ex (fun y => P)) ..))
+  (at level 200, x binder, right associativity, only parsing): type_scope.
 
 (** Lattice notations for predicates *)
 
