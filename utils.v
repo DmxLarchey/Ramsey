@@ -87,3 +87,31 @@ Proof.
   rewrite app_length in H1.
   omega.
 Qed.  
+
+Section Forall.
+
+  Variables (X : Type) (P : X -> Prop).
+
+  Fact Forall_app ll mm : Forall P (ll++mm) <-> Forall P ll /\ Forall P mm.
+  Proof.
+    split.
+    induction ll as [ | x ll ]; split; auto.
+    constructor;
+    inversion H; auto.
+    apply IHll; auto.
+    inversion H; apply IHll; auto.
+    intros (H1 & H2).
+    induction H1; simpl; auto; constructor; auto.
+  Qed.
+
+  Fact Forall_cons_inv x ll : Forall P (x::ll) <-> P x /\ Forall P ll.
+  Proof.
+    split.
+    inversion_clear 1; auto.
+    constructor; tauto.
+  Qed.
+
+End Forall.
+
+
+

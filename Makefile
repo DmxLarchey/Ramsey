@@ -109,7 +109,8 @@ VFILES:=ramsey_lattice.v\
   af.v\
   sublist.v\
   utils.v\
-  af2.v
+  af2.v\
+  bar.v
 
 ifneq ($(filter-out archclean clean cleanall printenv,$(MAKECMDGOALS)),)
 -include $(addsuffix .d,$(VFILES))
