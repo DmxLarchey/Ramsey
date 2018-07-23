@@ -7,6 +7,8 @@
 (*         CeCILL v2 FREE SOFTWARE LICENSE AGREEMENT          *)
 (**************************************************************)
 
+Require Import List.
+
 (** Symbols for copy/paste: ∩ ∪ ⊆ ⊇ ⊔ ⊓ ⊑ ≡  ⋅ ↑ ↓ ⇑ ⇓ ∀ ∃ *)
 
 (** Short notations for universal quantification *)
@@ -45,6 +47,20 @@ Reserved Notation "R '⇓' l"  (at level 61, format "R ⇓ l", left associativit
 (** Restriction notation *)
 
 Reserved Notation "R '⬇' P"  (at level 61, format "R ⬇ P", left associativity).
+Reserved Notation "R '↡' P"  (at level 61, format "R ↡ P", left associativity).
+
+Definition rel_restr X (P : X -> Prop) (R : X -> X -> Prop) (x y : sig P) := R (proj1_sig x) (proj1_sig y).
+Arguments rel_restr {X}.
+
+Definition pred_restr X (P Q : X -> Prop) (x : sig P) := Q (proj1_sig x).
+Arguments pred_restr {X}. 
+
+Notation "R ⬇ P" := (rel_restr P R).
+Notation "Q ↡ P" := (pred_restr P Q).
+
+Definition extends X (l m : list X) := exists x, l = x::m.
+Arguments extends {X}.
+
 
 
 

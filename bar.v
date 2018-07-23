@@ -77,6 +77,27 @@ Section bar.
     split; apply bar_mono; intro; rewrite app_ass; auto.
   Qed.
 
+  Variable P : list X -> Prop.
+
+  Theorem bar_Acc l : bar (fun m => ~ P m) l -> ∀ Hl, Acc (extends ⬇ P) (exist _ l Hl).
+  Proof.
+    induction 1 as [ l H | l H IH ].
+    + intros ?; destruct H; auto.
+    + intros Hl; constructor 1.
+      intros (m & Hm) (x & Hx); simpl in *; subst; auto.
+  Qed.
+
+  Hypothesis P_dec : ∀l, P l \/ ~ P l.  
+
+  Theorem Acc_bar l : Acc (extends ⬇ P) l -> bar (fun m => ~ P m) (proj1_sig l).
+  Proof.
+    induction 1 as [ (l&Hl) H IH ]; simpl.
+    constructor 2; intros x.
+    destruct (P_dec (x::l)) as [ H1 | H1 ].
+    + apply (IH (exist _ _ H1)); exists x; auto.
+    + constructor 1; auto.
+  Qed.
+
 End bar.
 
 Section bar_relmap.

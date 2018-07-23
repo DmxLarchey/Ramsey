@@ -18,12 +18,45 @@ Local Notation "A ⊆ B" := (∀x y, A x y -> B x y).
 Local Notation "A ⊓ B" := (fun x y => A x y /\ B x y).
 Local Notation "A ⊔ B" := (fun x y => A x y \/ B x y).
 
-Definition rel_restr X (P : X -> Prop) (R : X -> X -> Prop) (x y : sig P) := R (proj1_sig x) (proj1_sig y).
-Arguments rel_restr {X}.
-
-Local Notation "R ⬇ P" := (rel_restr P R).
-
 (** Symbols for copy/paste: ∩ ∪ ⊆ ⊇ ⊔ ⊓ ⊑ ≡  ⋅ ↑ ↓ ⇑ ⇓ ∀ ∃ *)
+
+Section IND.
+
+  Definition IND I (R : I -> I -> Prop) (P : I -> Prop) := forall x, (forall y, R y x -> P y) -> P x.
+
+  Definition IND_in I (D : I -> Prop) (R : I -> I -> Prop) (P : I -> Prop) := forall x, D x -> (forall y, D y -> R y x -> P y) -> P x.
+    
+  Theorem IND_in_IND I D R P : @IND_in I D R P <-> IND (R⬇D) (P↡D).
+  Proof.
+    split.
+    * intros H (x & Hx) H1; simpl.
+      apply (H _ Hx).
+      intros y Hy; apply (H1 (exist _ y Hy)).
+    * intros H x Hx H1.
+      apply (H (exist _ x Hx)).
+      intros (y & ?); cbv; auto.
+  Qed.
+  
+  Variable (I : Type) (R : I -> I -> Prop).
+  
+  Definition wf x := forall P, IND R P -> P x.
+  
+  Theorem wf_eq_Acc x : wf x <-> Acc R x.
+  Proof.
+    split.
+    * intros H; apply H.
+      intro; apply Acc_intro.
+    * intros H P HP; revert H.
+      induction 1 as [ x _ IHx ].
+      apply HP, IHx.
+  Qed.
+
+  Theorem well_founded_all_wf : well_founded R <-> forall x, wf x.
+  Proof.
+    split; intros H x; generalize (H x); apply wf_eq_Acc.
+  Qed.
+
+End IND.
 
 Section homogeneous.
 
@@ -202,29 +235,6 @@ Section hwf_binary.
       intros ? ?; unfold new; repeat (rewrite rev_app_distr; simpl); tauto.
   Qed.
 
-  (* hwf implies no increasing sequence *)
-
-  Fact hwf_seq R : hwf R -> ∀f, (∀ i j, i < j -> R (f j) (f i)) -> False.
-  Proof.
-    induction 1 as [ R HR | R HR IHR ]; intros f Hf.
-    * apply (HR (f 1) (f 0)), Hf; auto.
-    * apply (IHR (f 0) (fun n => f (S n))).
-      intros i j Hij; split; apply Hf; omega.
-  Qed.
-
-  Corollary hwf_irr R : hwf R -> ∀x, ~ R x x.
-  Proof. intros HR x Hx; apply (hwf_seq HR (fun _ => x)); auto. Qed.
-
-  Fact Acc_seq R a : Acc (fun x y => R y x) a -> ∀f, f 0 = a -> (∀i, R (f i) (f (S i))) -> False.
-  Proof.
-    induction 1 as [ a Ha IHa ]; intros f H1 H2.
-    apply (IHa (f 1)) with (f0 := fun n => f (S n)); auto.
-    subst; apply H2.
-  Qed.
-
-  Fact wf_seq R : well_founded (fun x y => R y x) -> ∀f, (∀i, R (f i) (f (S i))) -> False.
-  Proof. intros HR f Hf; apply (@Acc_seq _ _ (HR (f 0)) f); auto. Qed.
-
   Section wf_hwf.
 
     Variable R : X -> X -> Prop.
@@ -344,85 +354,155 @@ Section hwf_binary.
 
   Corollary hwf_bar_eq R : hwf R <-> bar (fun x => ~ homogeneous R x) nil.
   Proof. apply hwf_bar_lift_eq with (l := nil). Qed.
-  
-  Definition extends (l m : list X) := exists x, l = x::m.
+
+  (* This is the definition in Berardi's paper *)
  
   Definition Hwf R := well_founded (extends⬇(homogeneous R)).
+
+  Section well_founded_Hwf. 
+
+    Variable (R : X -> X -> Prop).
+
+    Let P y := forall l (Hl : homogeneous R (y::l)), Acc (extends⬇(homogeneous R)) (exist _ _ Hl).
+  
+    Let HP : IND R P.
+    Proof.
+      intros y Hy; unfold P in *; intros l Hl.
+      constructor; auto.
+      intros (p&Hp) (z & ?); simpl in *; subst.
+      apply Hy; auto.
+      revert Hp; apply homogeneous_two_inv.
+    Qed.
+
+    Theorem well_founded_Hwf : well_founded R -> Hwf R.
+    Proof.
+      rewrite well_founded_all_wf; intros HR.
+      assert (forall x, P x) as Hx.
+      { intros x; apply (HR x), HP. }
+      intros (l & Hl); constructor; auto.
+      intros (m & Hm) (y & ?); simpl in *; subst; apply Hx; auto.
+    Qed.
+
+  End well_founded_Hwf. 
+
+  Section Hwf_wf.
+
+    Variable (R : X -> X -> Prop).
+
+    (* This proof comes from Berardi's paper ... is there
+       a direct proof than doesn't uses wf/IND ? *)
+
+    Theorem Hwf_well_founded : Hwf R -> transitive _ R -> well_founded R.
+    Proof.
+      rewrite well_founded_all_wf; intros H HR x P HP.
+      set (Y l := homogeneous R l /\ match l with nil  => True | y::l => P y end).
+      assert (IND_in (homogeneous R) extends Y) as HY.
+      { intros [ | y l ] H1 H2; split; simpl; auto.
+        apply HP.
+        intros z Hz.
+        apply (H2 (z::y::l)).
+        constructor; auto.
+        apply homogeneous_inv, proj1 in H1; constructor; auto.
+        revert H1; apply Forall_impl; intro; apply HR; auto.
+        exists z; auto. }
+      red in H.
+      rewrite IND_in_IND in HY.
+      specialize (H (exist _ _ (homogeneous_sg R x))).
+      rewrite <- wf_eq_Acc in H.
+      apply (H _ HY).
+    Qed.
+
+  End Hwf_wf.
   
   Section Hwf_hwf.
+ 
+    (** We show the equivalence between Berardi's definition and
+        the direct inductive charaterization. We use the bar
+        inductive characterization for a wery short proof *)
   
     Variable (R : X -> X -> Prop).
+
+    (* hwf is always stronger than Hwf *)
     
     Theorem hwf_Hwf : hwf R -> Hwf R.
     Proof.
-      induction 1 as [ R HR | R HR IHR ].
-      + intros (l & Hl).
-        constructor 1; intros (m & H1) (x & Hx); simpl in *; subst.
-        constructor 1; intros (m & H2) (y & Hy); simpl in *; subst.
-        exfalso; apply homogeneous_two_inv in H2; revert H2; apply HR.
-      + intros (l & Hl); constructor 1; intros (m & Hm) (x & Hx); simpl in *; subst.
-        assert (exists m y, x::l = m++y::nil) as H1.
-        { rewrite <- (rev_involutive l).
-          destruct (rev l) as [ | y m ].
-          + exists nil, x; auto.
-          + exists (x::rev m), y; auto. }
-        destruct H1 as (m & y & H1).
-        revert Hm; rewrite H1; intros Hm.
-        generalize (homogeneous_downlift _ _ Hm); intros H2.
-        generalize (IHR y (exist _ m H2)).
-        generalize 
-        assert (homogeneous (R↓x) l) as H.
-        { apply homogeneous_inv, proj1 in Hm.
-          rewrite homogeneous_spec in Hl.
-          apply homogeneous_spec.
-          intros u a v b w E; split.
-          
-          
-      specialize (IHR x (exist _ l Hl)).
-  
-    Hypothesis R_dec : forall x y, R x y \/ ~ R x y.
-  
-    Let Hwf_hwf_rec x : Acc (extends⬇(homogeneous R)) x -> hwf (R⇓proj1_sig x).
-    Proof.
-      induction 1 as [ (m&Hm) H IHm ]; simpl in *.
-      constructor 2; intros x.
-      destruct (homogeneous_dec R R_dec (x::m)) as [ H1 | H1 ].
-      apply (IHm (exist _ _ H1)); exists x; auto.
-      constructor 1.
-      intros a b; contradict H1; constructor; auto.
-      do 2 rewrite rel_downlift_eq in H1; tauto.
+      rewrite hwf_bar_eq, bar_nil.
+      + intros H (l & Hl); apply (bar_Acc _ (H l)).
+      + intros x m H1; contradict H1.
+        rewrite homogeneous_inv in H1; tauto.
     Qed.
- 
+
+    Hypothesis R_dec : forall x y, R x y \/ ~ R x y.
+
+    (* For logically decidable relations, Hwf is equivalent to hwf *)
+
+    Hint Resolve homogeneous_dec.
+
     Theorem Hwf_hwf : Hwf R -> hwf R.
-    Proof. intros H; apply Hwf_hwf_rec with (x := exist _ _ (in_homo_0 R)), H. Qed.
-    
+    Proof.
+      rewrite hwf_bar_eq; intro; apply Acc_bar with (l := exist _ _ (in_homo_0 R)); auto.
+    Qed.
+
+    Hint Resolve hwf_Hwf Hwf_hwf.
+  
+    Theorem Hwf_hwf_eq : Hwf R <-> hwf R.
+    Proof. split; auto. Qed. 
+
   End Hwf_hwf.
-  
-  Check Hwf_hwf.
-    assert (forall l, homogeneous R l -> hwf (R⇓l)) as H1.
-    { intros l Hl.
-      specialize (H (exist _ l Hl)).
-      specialize (
-    intros H; constructor 2; intros x.
-    specialize (H (exist _ _ (homogeneous_sg R x))).
-    
-  
-  Theorem hwf_Hwf R : hwf R -> Hwf R.
+
+  (* hwf implies no increasing sequence *)
+
+  Fact hwf_seq R : hwf R -> ∀f, (∀ i j, i < j -> R (f j) (f i)) -> False.
   Proof.
-    induction 1 as [ R HR | R HR IHR ].
-    + intros (l & Hl).
-      constructor; intros (m & Hm) (x & Hx); simpl in *; subst.
-      constructor; intros (p & Hp) (y & Hy); simpl in *; subst.
-      exfalso; apply homogeneous_two_inv in Hp; revert Hp; apply HR.
-    + constructor 
-      
-      
-      
+    induction 1 as [ R HR | R HR IHR ]; intros f Hf.
+    * apply (HR (f 1) (f 0)), Hf; auto.
+    * apply (IHR (f 0) (fun n => f (S n))).
+      intros i j Hij; split; apply Hf; omega.
+  Qed.
+
+  Corollary hwf_irr R : hwf R -> ∀x, ~ R x x.
+  Proof. intros HR x Hx; apply (hwf_seq HR (fun _ => x)); auto. Qed.
+
+  Fact Acc_seq R a : Acc (fun x y => R y x) a -> ∀f, f 0 = a -> (∀i, R (f i) (f (S i))) -> False.
+  Proof.
+    induction 1 as [ a Ha IHa ]; intros f H1 H2.
+    apply (IHa (f 1)) with (f0 := fun n => f (S n)); auto.
+    subst; apply H2.
+  Qed.
+
+  Fact wf_seq R : well_founded (fun x y => R y x) -> ∀f, (∀i, R (f i) (f (S i))) -> False.
+  Proof. intros HR f Hf; apply (@Acc_seq _ _ (HR (f 0)) f); auto. Qed.
+
+  Section Hwf_Ramsey.
+    
+    (* Hence very short proof of Berardi's thm for decidable relations *)
+
+    Variables (R S : X -> X -> Prop)
+              (HR : forall x y, R x y \/ ~ R x y)
+              (HS : forall x y, S x y \/ ~ S x y).
+
+    Theorem Hwf_Ramsey : Hwf R -> Hwf S -> Hwf (R⊔S).
+    Proof.
+      repeat rewrite Hwf_hwf_eq; auto.
+      + apply hwf_Ramsey.
+      + intros x y; destruct (HR x y); destruct (HS x y); tauto.
+    Qed.
+
+  End Hwf_Ramsey.
 
 End hwf_binary.
 
-Check well_founded_hwf.
+Check hwf_Hwf.
+Check Hwf_well_founded.
 Check hwf_well_founded.
+
+Check hwf_Hwf.
+Check Hwf_hwf.
+Check well_founded_Hwf.
+Check well_founded_hwf.
+
+Check hwf_Ramsey.
+Check Hwf_Ramsey.
 
 (* gt = fun x y => y < x is homogeneous well-founded *)
 
