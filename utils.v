@@ -110,6 +110,18 @@ Section Forall.
     inversion_clear 1; auto.
     constructor; tauto.
   Qed.
+  
+  Hypothesis P_dec : forall x, P x \/ ~ P x.
+  
+  Fact Forall_l_dec l : Forall P l \/ ~ Forall P l.
+  Proof.
+    induction l as [ | x l [ IHl | IHl ] ].
+    + left; auto.
+    + destruct (P_dec x) as [ H | H ].
+      * left; constructor; auto.
+      * right; contradict H; rewrite Forall_cons_inv in H; tauto.
+    + right; contradict IHl; rewrite Forall_cons_inv in IHl; tauto.
+  Qed.
 
 End Forall.
 

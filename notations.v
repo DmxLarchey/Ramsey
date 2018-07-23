@@ -24,6 +24,7 @@ Reserved Notation "A '∩' B"  (at level 72, format "A  ∩  B", left associativ
 Reserved Notation "A '∪' B"  (at level 73, format "A  ∪  B", left associativity).
 Reserved Notation "A '⊆' B"  (at level 75, format "A  ⊆  B", no associativity).
 Reserved Notation "A '⊇' B"  (at level 75, format "A  ⊇  B", no associativity).
+Reserved Notation "A '≃' B"  (at level 75, format "A  ≃  B", no associativity).
 
 (** Lattice notations *)
 
@@ -35,11 +36,15 @@ Reserved Notation "A '≡' B " (at level 75, format "A  ≡  B", no associativit
 (** Lifting notations *)
 
 Reserved Notation "R '⋅' x"  (at level 11, format "R ⋅ x", left associativity).
+Reserved Notation "R '⋄' x"  (at level 11, format "R ⋄ x", left associativity).
 Reserved Notation "R '↑' x"  (at level 11, format "R ↑ x", left associativity).
 Reserved Notation "R '↓' x"  (at level 11, format "R ↓ x", left associativity).
 Reserved Notation "R '⇑' l"  (at level 61, format "R ⇑ l", left associativity).
 Reserved Notation "R '⇓' l"  (at level 61, format "R ⇓ l", left associativity).
 
+(** Restriction notation *)
+
+Reserved Notation "R '⬇' P"  (at level 61, format "R ⬇ P", left associativity).
 
 
 
