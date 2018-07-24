@@ -127,24 +127,23 @@ Section hwf_binary.
     Proof. intros H; constructor 2; intros x; apply Acc_hwf, H. Qed.
 
   End wf_hwf.
-
-  Section hwf_wf.
-
-    Fact down_transitive R : transitive _ R -> forall x, transitive _ (R↓x).
-    Proof. intros H a x y z H1 H2; specialize (H x y); firstorder. Qed.
   
-    Theorem hwf_well_founded R : hwf R -> transitive _ R -> well_founded R.
-    Proof.
-      induction 1 as [ R HR | R HR IHR ]; intros H1 a; constructor; intros b Hb.
-      + destruct (HR _ _ Hb).
-      + specialize (IHR _ (down_transitive H1 a) b).
-        induction IHR as [ b Hb' IHb ].
-        constructor 1; intros c Hc.
-        apply IHb; auto.
-        apply H1 with (1 := Hc); auto.
-    Qed.
+  Fact rel_reduce_transitive R : transitive _ R -> forall x, transitive _ (R↓x).
+  Proof. intros H a x y z H1 H2; specialize (H x y); firstorder. Qed.
+    
+  Fact rel_reduce_mono R S : R ⊆ S -> ∀x, R↓x ⊆ S↓x.
+  Proof. cbv; firstorder. Qed.
 
-  End hwf_wf.
+  Theorem hwf_well_founded R : hwf R -> transitive _ R -> well_founded R.
+  Proof.
+    induction 1 as [ R HR | R HR IHR ]; intros H1 a; constructor; intros b Hb.
+    + destruct (HR _ _ Hb).
+    + specialize (IHR _ (rel_reduce_transitive H1 a) b).
+      induction IHR as [ b Hb' IHb ].
+      constructor 1; intros c Hc.
+      apply IHb; auto.
+      apply H1 with (1 := Hc); auto.
+  Qed.
 
   Fixpoint list_rel_reduce R l :=
     match l with
@@ -153,12 +152,9 @@ Section hwf_binary.
     end
   where "R ⇓ l" := (list_rel_reduce R l).
 
-  Fact rel_reduce_mono R S : R ⊆ S -> ∀x, R↓x ⊆ S↓x.
-  Proof. cbv; firstorder. Qed.
-
-  Fact rel_reduce_app R l m : R⇓(l++m) = R⇓m⇓l.
+  Fact list_rel_reduce_app R l m : R⇓(l++m) = R⇓m⇓l.
   Proof. induction l; simpl; auto; rewrite IHl; auto. Qed.
- 
+
   Fact list_rel_reduce_mono R S : R ⊆ S -> ∀l, R⇓l ⊆ S⇓l.
   Proof.
     intros H l; revert R S H; induction l; simpl; intros R S H; auto.
