@@ -7,10 +7,12 @@ ramsey_paper.v
 af.v
 sublist.v
 utils.v
-af2.v
 bar.v
-hwf2.v
 AF.v
 HWF.v
 arity.v
 hwf.v
+wf.v
+homogeneous.v
+good.v
+base.v

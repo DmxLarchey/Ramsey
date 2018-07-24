@@ -9,143 +9,14 @@
 
 Require Import List Arith Omega Wellfounded Relations.
 
-Require Import notations sublist utils bar arity HWF.
+Require Import base homogeneous wf bar arity HWF.
 
 Set Implicit Arguments.
 
 Local Notation "A ⊆ B" := (∀x y, A x y -> B x y).
 
-Local Notation "A ⊓ B" := (fun x y => A x y /\ B x y).
-Local Notation "A ⊔ B" := (fun x y => A x y \/ B x y).
-
-(** Symbols for copy/paste: ∩ ∪ ⊆ ⊇ ⊔ ⊓ ⊑ ≡  ⋅ ↑ ↓ ⇑ ⇓ ∀ ∃ *)
-
-Section IND.
-
-  Definition IND I (R : I -> I -> Prop) (P : I -> Prop) := forall x, (forall y, R y x -> P y) -> P x.
-
-  Definition IND_in I (D : I -> Prop) (R : I -> I -> Prop) (P : I -> Prop) := forall x, D x -> (forall y, D y -> R y x -> P y) -> P x.
-    
-  Theorem IND_in_IND I D R P : @IND_in I D R P <-> IND (R⬇D) (P↡D).
-  Proof.
-    split.
-    * intros H (x & Hx) H1; simpl.
-      apply (H _ Hx).
-      intros y Hy; apply (H1 (exist _ y Hy)).
-    * intros H x Hx H1.
-      apply (H (exist _ x Hx)).
-      intros (y & ?); cbv; auto.
-  Qed.
-  
-  Variable (I : Type) (R : I -> I -> Prop).
-  
-  Definition wf x := forall P, IND R P -> P x.
-  
-  Theorem wf_eq_Acc x : wf x <-> Acc R x.
-  Proof.
-    split.
-    * intros H; apply H.
-      intro; apply Acc_intro.
-    * intros H P HP; revert H.
-      induction 1 as [ x _ IHx ].
-      apply HP, IHx.
-  Qed.
-
-  Theorem well_founded_all_wf : well_founded R <-> forall x, wf x.
-  Proof.
-    split; intros H x; generalize (H x); apply wf_eq_Acc.
-  Qed.
-
-End IND.
-
-Section homogeneous.
-
-  Variable (X : Type) (R : X -> X -> Prop).
-
-  (* homogeneous R (x1::...::xn::nil) iff forall i < j, xi R xj, see homogeneous_spec below *)
-
-  Inductive homogeneous : list X -> Prop :=
-    | in_homo_0 : homogeneous nil
-    | in_homo_1 : ∀ x l, homogeneous l -> Forall (R x) l -> homogeneous (x::l).
-    
-  Fact homogeneous_sg x : homogeneous (x::nil).
-  Proof. do 2 constructor. Qed.
-    
-  Fact homogeneous_inv x l : homogeneous (x::l) <-> Forall (R x) l /\ homogeneous l.
-  Proof. 
-    split. 
-    * inversion 1; subst; auto.
-    * constructor; tauto. 
-  Qed.
-  
-  Fact homogeneous_app_inv l m : 
-         homogeneous (l++m) <-> homogeneous l 
-                             /\ homogeneous m 
-                             /\ ∀ x y, In x l -> In y m -> R x y.
-  Proof.
-    split.
-    + induction l as [ | x l IHl ]; simpl.
-      * repeat split; auto; try constructor; intros _ _ [].
-      * intros H.
-        apply homogeneous_inv in H.
-        destruct H as [ H1 H2 ].
-        apply IHl in H2.
-        destruct H2 as (H2 & H3 & H4).
-        apply Forall_app in H1.
-        destruct H1 as [ H0 H1 ].
-        repeat split; auto.
-        constructor; auto.
-        intros x' y [ | H' ] Hy; auto.
-        subst.
-        rewrite Forall_forall in H1; auto.
-    + intros (H1 & H2 & H3); revert H3.
-      induction H1 as [ | x l H1 IH1 H3 ]; intros H4; simpl; auto.
-      constructor.
-      * apply IH1; intros; apply H4; auto; right; auto.
-      * rewrite Forall_app; split; auto.
-        rewrite Forall_forall.
-        intros; apply H4; auto; left; auto.
-  Qed.
- 
-  Fact homogeneous_two_inv x y l : homogeneous (x::y::l) -> R x y.
-  Proof.
-    inversion 1; subst.
-    inversion H3; subst; auto.
-  Qed.
-  
-  (* This is a non-inductive characterization of homogeneous *)
-  
-  Theorem homogeneous_spec ll : homogeneous ll <-> ∀ l x m y r, ll = l++x::m++y::r -> R x y.
-  Proof.
-    split.
-    + intros H l x m y r E; subst.
-      rewrite homogeneous_app_inv in H.
-      destruct H as (_ & H & _).
-      rewrite homogeneous_inv, Forall_app, Forall_cons_inv in H.
-      tauto.
-    + induction ll as [ | a ll IHll ]; intros Hll; constructor.
-      * apply IHll.
-        intros l x m y r E.
-        apply (Hll (a::l) x m y r); subst; auto.
-      * rewrite Forall_forall; intros u Hu.
-        apply in_split in Hu; destruct Hu as (l & r & Hu).
-        apply (Hll nil a l u r); subst; auto.
-  Qed.
-  
-  Hypothesis R_dec : forall x y, R x y \/ ~ R x y.
-  
-  Theorem homogeneous_dec l : homogeneous l \/ ~ homogeneous l.
-  Proof. 
-    induction l as [ | x l [ H | H ] ].
-    + left; constructor.
-    + destruct Forall_l_dec with (P := R x) (l := l) as [ H1 | H1 ].
-      * intro; apply R_dec.
-      * left; constructor; auto.
-      * right; contradict H1; rewrite homogeneous_inv in H1; tauto.
-    + right; contradict H; rewrite homogeneous_inv in H; tauto.
-  Qed.
-
-End homogeneous.
+Local Notation "A ∩ B" := (fun x y => A x y /\ B x y).
+Local Notation "A ∪ B" := (fun x y => A x y \/ B x y).
 
 (** Symbols for copy/paste: ∩ ∪ ⊆ ⊇ ⊔ ⊓ ⊑ ≡  ⋅ ↑ ↓ ⇑ ⇓ ∀ ∃ *)
 
@@ -168,72 +39,74 @@ Section hwf_binary.
     * constructor 2; intros x.
       apply (IHR x); intros ? ? []; split; auto.
   Qed.
-
-  Let new R l := 
-    match rev l with
-      | a::b::l_ => R b a
-      | _ => False
-    end.
-
-  Fact hwf_HWF R : hwf R -> HWF (new R).
-  Proof.
-    induction 1 as [ R HR | R HR IHR ].
-    * constructor 1.
-      intros l; rewrite <- (rev_involutive l); generalize (rev l); clear l.
-      intros l; unfold new; rewrite rev_involutive; revert l.
-      intros [|?[|?[|]]]; simpl; auto.
-    * constructor 2; intros x.
-      generalize (IHR x); apply HWF_anti.
-      intros l; unfold new; rewrite rev_app_distr; simpl.
-      destruct (rev l) as [|?[|?[|]]]; simpl; tauto.
-  Qed.
-
-  Let wen (S : list X -> Prop) a b := S (a::b::nil).
-
-  Let wen_new R a b : wen (new R) a b <-> R a b.
-  Proof. cbv; tauto. Qed.
-
-  Let Ar2 (S : list X -> Prop) := ∀ a b l, S (a::b::nil) <-> S (a::b::l).
-
-  Fact HWF_hwf T : HWF T -> kary 2 (fun l => T (rev l)) -> hwf (wen T).
-  Proof.
-    induction 1 as [ T HT | T HT IHT ]; intros Ha.
-    * constructor 1; intros ? ?; apply HT.
-    * constructor 2; intros x; red in Ha; simpl in Ha.
-      eapply hwf_anti.
-      2: apply (IHT x).
-      + intros a b; cbv.
-        rewrite (Ha x b (a::nil)); tauto. 
-      + intros a b l; simpl.
-        rewrite Ha, (Ha x a (b::nil)), (Ha x a (b::l)).
-        tauto.
-  Qed.
-
-  Theorem hwf_HWF_eq R : hwf R <-> HWF (new R).
-  Proof.
-    split.
-    * apply hwf_HWF.
-    * intros H.
-      eapply hwf_anti.
-      2: apply HWF_hwf with (1 := H).
-      intros a b; apply wen_new.
-      unfold kary, new.
-      intros a b l; repeat rewrite rev_involutive; tauto.
-  Qed.
   
-  (* This is a generalization of Berardi's thm *)
+  Section hwf_Ramsey.
 
-  Theorem hwf_Ramsey R S : hwf R -> hwf S -> hwf (R⊔S).
-  Proof.
-    do 3 rewrite hwf_HWF_eq; intros H1 H2.
-    eapply HWF_anti.
-    2: apply HWF_Ramsey with (3 := H1) (4 := H2).
-    * intros l; unfold new; destruct (rev l) as [|?[|]]; tauto.
-    * do 2 (constructor 2; intros ?); constructor 1.
-      intros ? ?; unfold new; repeat (rewrite rev_app_distr; simpl); tauto.
-    * do 2 (constructor 2; intros ?); constructor 1.
-      intros ? ?; unfold new; repeat (rewrite rev_app_distr; simpl); tauto.
-  Qed.
+    Let new R l := 
+      match rev l with
+        | a::b::_ => R b a
+        | _ => False
+      end.
+
+    Let wen (S : list X -> Prop) a b := S (a::b::nil).
+
+    Let wen_new R a b : wen (new R) a b <-> R a b.
+    Proof. cbv; tauto. Qed.
+
+    Let hwf_HWF R : hwf R -> HWF (new R).
+    Proof.
+      induction 1 as [ R HR | R HR IHR ].
+      * constructor 1.
+        intros l; rewrite <- (rev_involutive l); generalize (rev l); clear l.
+        intros l; unfold new; rewrite rev_involutive; revert l.
+        intros [|?[|?[|]]]; simpl; auto.
+      * constructor 2; intros x.
+        generalize (IHR x); apply HWF_anti.
+        intros l; unfold new; rewrite rev_app_distr; simpl.
+        destruct (rev l) as [|?[|?[|]]]; simpl; tauto.
+    Qed.
+
+    Let HWF_hwf T : HWF T -> kary 2 (fun l => T (rev l)) -> hwf (wen T).
+    Proof.
+      induction 1 as [ T HT | T HT IHT ]; intros Ha.
+      * constructor 1; intros ? ?; apply HT.
+      * constructor 2; intros x; red in Ha; simpl in Ha.
+        eapply hwf_anti.
+        2: apply (IHT x).
+        + intros a b; cbv.
+          rewrite (Ha x b (a::nil)); tauto. 
+        + intros a b l; simpl.
+          rewrite Ha, (Ha x a (b::nil)), (Ha x a (b::l)).
+          tauto.
+    Qed.
+
+    Let hwf_HWF_eq R : hwf R <-> HWF (new R).
+    Proof.
+      split.
+      * apply hwf_HWF.
+      * intros H.
+        eapply hwf_anti.
+        2: apply HWF_hwf with (1 := H).
+        intros a b; apply wen_new.
+        unfold kary, new.
+        intros a b l; repeat rewrite rev_involutive; tauto.
+    Qed.
+  
+    (* This is an instance of Berardi's thm *)
+
+    Theorem hwf_Ramsey R S : hwf R -> hwf S -> hwf (R∪S).
+    Proof.
+      do 3 rewrite hwf_HWF_eq; intros H1 H2.
+      eapply HWF_anti.
+      2: apply HWF_Ramsey with (3 := H1) (4 := H2).
+      * intros l; unfold new; destruct (rev l) as [|?[|]]; tauto.
+      * do 2 (constructor 2; intros ?); constructor 1.
+        intros ? ?; unfold new; repeat (rewrite rev_app_distr; simpl); tauto.
+      * do 2 (constructor 2; intros ?); constructor 1.
+        intros ? ?; unfold new; repeat (rewrite rev_app_distr; simpl); tauto.
+    Qed.
+    
+  End hwf_Ramsey.
 
   Section wf_hwf.
 
@@ -273,26 +146,26 @@ Section hwf_binary.
 
   End hwf_wf.
 
-  Fixpoint rel_downlift R l :=
+  Fixpoint list_rel_reduce R l :=
     match l with
       | nil  => R
       | x::l => (R⇓l)↓x
     end
-  where "R ⇓ l" := (rel_downlift R l).
+  where "R ⇓ l" := (list_rel_reduce R l).
 
-  Fact downlift_mono R S : R ⊆ S -> ∀x, R↓x ⊆ S↓x.
+  Fact rel_reduce_mono R S : R ⊆ S -> ∀x, R↓x ⊆ S↓x.
   Proof. cbv; firstorder. Qed.
 
-  Fact rel_downlift_app R l m : R⇓(l++m) = R⇓m⇓l.
+  Fact rel_reduce_app R l m : R⇓(l++m) = R⇓m⇓l.
   Proof. induction l; simpl; auto; rewrite IHl; auto. Qed.
  
-  Fact rel_downlift_mono R S : R ⊆ S -> ∀l, R⇓l ⊆ S⇓l.
+  Fact list_rel_reduce_mono R S : R ⊆ S -> ∀l, R⇓l ⊆ S⇓l.
   Proof.
     intros H l; revert R S H; induction l; simpl; intros R S H; auto.
-    apply downlift_mono, IHl; auto.
+    apply rel_reduce_mono, IHl; auto.
   Qed.
 
-  Fact rel_downlift_eq R l x y : (R⇓l) x y <-> R x y /\ Forall (R y) l /\ homogeneous R l.
+  Fact list_rel_reduce_spec R l x y : (R⇓l) x y <-> R x y /\ Forall (R y) l /\ homogeneous R l.
   Proof.
     revert x y; induction l as [ | a l IHl ]; intros x y; simpl.
     + repeat split; try tauto; constructor.
@@ -300,22 +173,6 @@ Section hwf_binary.
       repeat rewrite homogeneous_inv.
       repeat rewrite Forall_cons_inv.
       tauto.
-  Qed.
-  
-  Fact homogeneous_downlift R ll x : homogeneous R (ll ++ x :: nil) -> homogeneous (R↓x) ll.
-  Proof.
-    intros H; apply homogeneous_app_inv in H.
-    destruct H as (H1 & _ & H2).
-    assert (Forall (fun y => R y x) ll) as H3.
-    { rewrite Forall_forall; intros y Hy.
-      apply H2; simpl; auto. }
-    clear H2; revert H1 x H3.
-    induction 1 as [ | x ll H1 H2 IH2 ]; intros y Hy; simpl.
-    + constructor.
-    + rewrite Forall_cons_inv in Hy.
-      destruct Hy as [ H3 H4 ].
-      constructor 2; auto.
-      revert IH2 H4; repeat rewrite Forall_forall; firstorder.
   Qed.
 
   Section hwf_homogeneous.
@@ -327,7 +184,7 @@ Section hwf_binary.
         apply in_bar_1; intros b.
         apply in_bar_0; intros H.
         apply (HR b a), HS.
-        rewrite rel_downlift_eq.
+        rewrite list_rel_reduce_spec.
         rewrite homogeneous_inv, homogeneous_inv, Forall_cons_inv in H.
         tauto.
       * apply in_bar_1; intros x.
@@ -339,7 +196,7 @@ Section hwf_binary.
     Proof.
       induction 1 as [ l Hl | l Hl IHl ].
       * constructor 1; intros x y Hxy.
-        rewrite rel_downlift_eq in Hxy.
+        rewrite list_rel_reduce_spec in Hxy.
         apply Hl; tauto.
       * constructor 2; intros; apply IHl.
     Qed.
@@ -396,7 +253,7 @@ Section hwf_binary.
     Proof.
       rewrite well_founded_all_wf; intros H HR x P HP.
       set (Y l := homogeneous R l /\ match l with nil  => True | y::l => P y end).
-      assert (IND_in (homogeneous R) extends Y) as HY.
+      assert (IND_st (homogeneous R) extends Y) as HY.
       { intros [ | y l ] H1 H2; split; simpl; auto.
         apply HP.
         intros z Hz.
@@ -406,7 +263,7 @@ Section hwf_binary.
         revert H1; apply Forall_impl; intro; apply HR; auto.
         exists z; auto. }
       red in H.
-      rewrite IND_in_IND in HY.
+      rewrite IND_st_IND in HY.
       specialize (H (exist _ _ (homogeneous_sg R x))).
       rewrite <- wf_eq_Acc in H.
       apply (H _ HY).
@@ -440,7 +297,8 @@ Section hwf_binary.
 
     Theorem Hwf_hwf : Hwf R -> hwf R.
     Proof.
-      rewrite hwf_bar_eq; intro; apply Acc_bar with (l := exist _ _ (in_homo_0 R)); auto.
+      rewrite hwf_bar_eq; intro. 
+      apply Acc_bar with (l := exist _ _ (in_homogeneous_0 R)); auto.
     Qed.
 
     Hint Resolve hwf_Hwf Hwf_hwf.
@@ -481,7 +339,7 @@ Section hwf_binary.
               (HR : forall x y, R x y \/ ~ R x y)
               (HS : forall x y, S x y \/ ~ S x y).
 
-    Theorem Hwf_Ramsey : Hwf R -> Hwf S -> Hwf (R⊔S).
+    Theorem Hwf_Ramsey : Hwf R -> Hwf S -> Hwf (R∪S).
     Proof.
       repeat rewrite Hwf_hwf_eq; auto.
       + apply hwf_Ramsey.
@@ -495,7 +353,6 @@ End hwf_binary.
 Check hwf_Hwf.
 Check Hwf_well_founded.
 Check hwf_well_founded.
-
 Check hwf_Hwf.
 Check Hwf_hwf.
 Check well_founded_Hwf.

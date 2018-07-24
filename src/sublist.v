@@ -116,78 +116,77 @@ Section sublist.
     apply sublist_inv_cons in H2.
     destruct H2; subst; simpl; auto.
     right; exists r; auto.
-  Qed.    
-  
-  Fact sublist_snoc_inv ll mm x : ll <sl mm++x::nil -> ll <sl mm \/ exists l', l' <sl mm /\ ll = l'++x::nil.
-  Proof.
-    intros H.
-    apply sublist_app_inv_rt in H.
-    destruct H as ( l1 & r1 & H1 & H2 & H3 ).
-    inversion H3; subst.
-    left; rewrite <- app_nil_end; auto.
-    apply sublist_inv_cons in H3.
-    destruct H3 as [ H3 | H3 ]; try discriminate H3.
-    injection H3; clear H3; intros; subst.
-    right; exists l1; auto.
-    apply sublist_nil_inv in H4; subst.
-    left; rewrite <- app_nil_end; auto.
-  Qed.
-
-  Fact sl_erase_rec ll mm : ll <sl mm -> forall l m r, ll = l++m++r -> l++r <sl mm.
-  Proof.
-    induction 1 as [ l1 | a l1 l2 H IH | a l1 l2 H IH ]; intros l m r Eq; subst.
-    destruct l; try discriminate Eq; simpl in Eq |- *.
-    destruct m; try discriminate Eq; simpl in Eq |- *.
-    subst; constructor 1.
-    
-    destruct l as [ | a' l ]; simpl in Eq |- *.
-    destruct m as [ | b' l ]; simpl in Eq |- *.
-    subst; constructor 2; auto.
-    injection Eq; clear Eq; intros; subst.
-    constructor 3.
-    apply (IH nil l r); auto.
-    injection Eq; clear Eq; intros; subst.
-    constructor 2.
-    apply (IH _ m); auto.
-    constructor 3.
-    apply (IH _ m); auto.
   Qed.
   
-  Fact sl_erase l m r mm : l++m++r <sl mm -> l++r <sl mm.
+  Fact sl_In ll mm x : ll <sl mm -> In x ll -> In x mm.
   Proof.
-    intros H; apply sl_erase_rec with (1 := H) (m := m); auto.
+    induction 1 as [ mm | a ll mm H IH | a ll mm H IH ].
+    intros [].
+    intros [ H' | H' ]; subst; simpl; tauto.
+    right; auto.
   Qed.
 
-  Fact sl_cons_erase a l m : a::l <sl m -> l <sl m.
+  Fact In_sl a l : In a l <-> a::nil <sl l.
   Proof.
-    apply sl_erase with (l := nil) (m := a::nil).
+    induction l as [ | x l IHl ].
+    * simpl; split; try tauto; inversion 1.
+    * simpl; rewrite IHl.
+      split.
+      + intros [ ? | H ]; subst.
+        - do 2 constructor.
+        - constructor 3; auto.
+      + intros H.
+        apply  sublist_cons_inv_rt in H.
+        destruct H as [ | (? & H & _) ]; auto.
+        inversion H; auto.
   Qed.
-    
-  Let sl_trans_rec l1 l2 : l1 <sl l2 -> forall mm l3, mm++l2 <sl l3 -> mm++l1 <sl l3.
-  Proof.
-    induction 1 as [ l1 | a l1 l2 H IH | a l1 l2 H IH ].
-    
-    intros mm l3.
-    cutrewrite (mm++l1 = mm++l1++nil).
-    apply sl_erase.
-    rewrite <- app_nil_end; auto.
-    
-    intros mm l3 H3.
-    cutrewrite (mm++a::l1 = (mm++a::nil)++l1).
-    apply IH.
-    rewrite app_ass; auto.
-    rewrite app_ass; auto.
-    
-    intros mm l3 H3.
-    apply IH.
-    apply sl_erase with (m := a::nil).
-    simpl; auto.
-  Qed.
+  
+  Section sl_trans.
+  
+    Let sl_erase_rec ll mm : ll <sl mm -> forall l m r, ll = l++m++r -> l++r <sl mm.
+    Proof.
+      induction 1 as [ l1 | a l1 l2 H IH | a l1 l2 H IH ]; intros l m r Eq; subst.
+      + destruct l; try discriminate Eq; simpl in Eq |- *.
+        destruct m; try discriminate Eq; simpl in Eq |- *.
+        subst; constructor 1.
+      + destruct l as [ | a' l ]; simpl in Eq |- *.
+        destruct m as [ | b' l ]; simpl in Eq |- *.
+        subst; constructor 2; auto.
+        injection Eq; clear Eq; intros; subst.
+        constructor 3.
+        apply (IH nil l r); auto.
+        injection Eq; clear Eq; intros; subst.
+        constructor 2.
+        apply (IH _ m); auto.
+      + constructor 3.
+        apply (IH _ m); auto.
+    Qed.
+  
+    Fact sl_erase l m r mm : l++m++r <sl mm -> l++r <sl mm.
+    Proof. intros H; apply sl_erase_rec with (1 := H) (m := m); auto. Qed.
 
-  Fact sl_trans l1 l2 l3 : l1 <sl l2 -> l2 <sl l3 -> l1 <sl l3.
-  Proof.
-    intro; apply sl_trans_rec with (mm := nil); auto.
-  Qed.
+    Let sl_trans_rec l1 l2 : l1 <sl l2 -> forall mm l3, mm++l2 <sl l3 -> mm++l1 <sl l3.
+    Proof.
+      induction 1 as [ l1 | a l1 l2 H IH | a l1 l2 H IH ].
+      + intros mm l3.
+        cutrewrite (mm++l1 = mm++l1++nil).
+        apply sl_erase.
+        rewrite <- app_nil_end; auto.
+      + intros mm l3 H3.
+        cutrewrite (mm++a::l1 = (mm++a::nil)++l1).
+        apply IH.
+        rewrite app_ass; auto.
+        rewrite app_ass; auto.
+      + intros mm l3 H3.
+        apply IH.
+        apply sl_erase with (m := a::nil).
+        simpl; auto.
+      Qed.
+
+    Fact sl_trans l1 l2 l3 : l1 <sl l2 -> l2 <sl l3 -> l1 <sl l3.
+    Proof. intro; apply sl_trans_rec with (mm := nil); auto. Qed.
+  
+  End sl_trans.
 
   Fact sl_app_left ll mm : mm <sl ll++mm.
   Proof.
@@ -224,23 +223,40 @@ Section sublist.
     simpl; apply sl_app; auto; apply sl_refl.
     simpl; apply sl_snoc; auto.
   Qed.
-  
-  Fact sl_In ll mm x : ll <sl mm -> In x ll -> In x mm.
+
+  Fact sl_cons_inv x ll mm : x::ll <sl mm <-> exists l r, mm = l++x::r /\ ll <sl r.
   Proof.
-    induction 1 as [ mm | a ll mm H IH | a ll mm H IH ].
-    intros [].
-    intros [ H' | H' ]; subst; simpl; tauto.
-    right; auto.
+    split.
+    * change (x::ll) with ((x::nil)++ll); intros H.
+      apply sublist_app_inv_lft in H.
+      destruct H as (pp & r & H1 & H2 & H3).
+      rewrite <- In_sl in H2.
+      apply in_split in H2.
+      destruct H2 as (l & m & H2); subst.
+      exists l, (m++r); rewrite app_ass; simpl; split; auto.
+      apply sl_trans with (2 := sl_app_left _ _); auto.
+    * intros (l & r & ? & H); subst.
+      apply sl_trans with (2 := sl_app_left _ _); auto.
+      constructor 2; auto.
+  Qed.
+  
+  Fact sublist_snoc_inv ll mm x : ll <sl mm++x::nil -> ll <sl mm \/ exists l', l' <sl mm /\ ll = l'++x::nil.
+  Proof.
+    intros H.
+    apply sublist_app_inv_rt in H.
+    destruct H as ( l1 & r1 & H1 & H2 & H3 ).
+    inversion H3; subst.
+    left; rewrite <- app_nil_end; auto.
+    apply sublist_inv_cons in H3.
+    destruct H3 as [ H3 | H3 ]; try discriminate H3.
+    injection H3; clear H3; intros; subst.
+    right; exists l1; auto.
+    apply sublist_nil_inv in H4; subst.
+    left; rewrite <- app_nil_end; auto.
   Qed.
 
-  Fact In_sl (a : X) l : In a l -> a::nil <sl l.
-  Proof.
-    induction l.
-    intros [].
-    intros [ []| ].
-    constructor 2; constructor 1.
-    constructor 3; auto.
-  Qed.
+  Fact sl_cons_erase a l m : a::l <sl m -> l <sl m.
+  Proof. apply sl_erase with (l := nil) (m := a::nil). Qed.
 
   Fact sublist_eq ll mm : ll <sl mm -> length mm <= length ll -> ll = mm.
   Proof.

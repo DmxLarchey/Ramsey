@@ -9,7 +9,7 @@
 
 Require Import List Arith Omega Wellfounded.
 
-Require Import notations utils ramsey_paper.
+Require Import base ramsey_paper.
 
 Set Implicit Arguments.
 
@@ -54,9 +54,6 @@ Section kary.
       | 0   => ∀x, R x <-> R nil
       | S k => ∀x, kary k (R⋅x)
     end.
-
-  (* R is k-ary strict if R l holds iff l is
-     of the form m++r where length m = k and R m *) 
   
   Fixpoint kary_strict k R :=
     match k with 
@@ -86,6 +83,33 @@ Section kary.
       simpl; omega.
   Qed.
   
+  (* R is k-ary strict iff (R ll holds iff ll is of the form l++r where length l = k and R l) *) 
+  
+  Fact kary_strict_spec k R : kary_strict k R <-> (∀ ll, R ll <-> ∃ l r, R l /\ ll = l++r /\ length l = k).
+  Proof.
+    split.
+    + intros H ll; split.
+      * intros Hll.
+        generalize (kary_strict_length _ _ _ H Hll); intros H1.
+        destruct list_split_first_half with (1 := H1) as (l & r & H2 & H3).
+        exists l, r; repeat split; auto; subst ll.
+        revert Hll; apply kary_strict_prefix with (1 := H); omega.
+      * intros (l & r & H1 & H2 & H3); subst ll.
+        revert H1; apply kary_strict_prefix with (1 := H); omega.
+    + revert R; induction k as [ | k IHk ]; intros R HR; simpl.
+      * intros ll; rewrite HR; split.
+        - intros ([|] & ? & ? & ? & ?); auto; discriminate.
+        - exists nil, ll; auto.
+      * split.
+        - rewrite HR; intros ([|] & ? & ? & ? & ?); discriminate.
+        - intros x; apply IHk.
+          intros ll; rewrite HR.
+          split.
+          ** intros ([|y l] & r & H1 & H2 & H3); try discriminate.
+             inversion H2; subst y ll; exists l, r; auto.
+          ** intros (l & r & H1 & H2 & H3); exists (x::l), r; simpl; subst; auto.
+  Qed.
+
 End kary. 
 
 Section Arity.

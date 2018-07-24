@@ -29,7 +29,7 @@
 
 Require Import Wellfounded Coq.Setoids.Setoid.
 
-Require Import notations.
+Require Import base.
 
 Set Implicit Arguments.
 

@@ -122,6 +122,16 @@ Section Forall.
       * right; contradict H; rewrite Forall_cons_inv in H; tauto.
     + right; contradict IHl; rewrite Forall_cons_inv in IHl; tauto.
   Qed.
+  
+  Fact Exists_l_dec l : (exists x, In x l /\ P x) \/ forall x, In x l -> ~ P x.
+  Proof.
+    induction l as [ | x l [ (y & H1 & H2) | IHl ] ].
+    + right; simpl; tauto.
+    + left; exists y; simpl; auto.
+    + destruct (P_dec x) as [ H | H ].
+      * left; exists x; simpl; auto.
+      * right; intros ? [|]; subst; auto.
+  Qed.
 
 End Forall.
 
