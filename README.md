@@ -45,7 +45,7 @@ Theorem Ramsey_lattice r s : US r -> US s -> UF r -> UF s -> UF (r⊓s).
   applications of `op x` always leads to a fixpoint.
 
   `UF` stands for *ultimately full* and means that repeated
-  applications of `fun a => a⊔a⋅x` always leads to `⊤` (i.e. the full
+  applications of `a ↦ a⊔a⋅x` always leads to `⊤` (i.e. the full
   element of the lattice).
 
 ### Bibliography
