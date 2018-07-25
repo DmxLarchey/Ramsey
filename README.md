@@ -13,7 +13,7 @@
 (**************************************************************)
 ```
 
-### What is this repository for? 
+## What is this repository for? 
 
 * This repository contains a constructive Coq implementation of
   the [direct and abstract proof of Ramsey's 
@@ -38,7 +38,7 @@
   to as shorter proof of *Kruskal's tree theorem* following an
   unpublished draft by T. Coquand.
 
-## The direct and abstract proof of Ramsey's theorem
+### The direct and abstract proof of Ramsey's theorem
 
 * We show the following result is a distributive
   lattice `(Σ,⊑,⊔,⊓,⊥,⊤)` with an operator 
@@ -65,13 +65,13 @@ Theorem Ramsey_lattice r s : US r -> US s -> UF r -> UF s -> UF (r⊓s).
   applications of `a ↦ a⊔a⋅x` always leads to `⊤` (i.e. the full
   element of the lattice).
 
-## Applications to finitary and binary Almost Full relations
+### Applications to finitary and binary Almost Full relations
 
 * This repository also contains applications of the abstract
   Ramsey theorem to finitary and binary relations, both
   for  (`af`) and
 
-## Applications to finitary and binary Homogeneous Well-founded relations
+### Applications to finitary and binary Homogeneous Well-founded relations
 
 *  for 
   (`hwf`).
@@ -115,7 +115,7 @@ Theorem Hwf_hwf R : (∀ x y, R x y \/ ~ R x y) -> Hwf R -> hwf R.
 ### Some more
 
 
-### Bibliography
+## Bibliography
 
 * The draft paper [A direct proof of Ramsey’s Theorem](http://www.cse.chalmers.se/~coquand/ramsey2.pdf) by Thierry Coquand.
 
