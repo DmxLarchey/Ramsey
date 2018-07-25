@@ -194,7 +194,7 @@ Theorem Hwf_hwf R : (∀ x y, R x y \/ ~ R x y) -> Hwf R -> hwf R.
 
 * Which definition is best, `Hwf` or `hwf` given that Hwf is a bit weaker
   for non-decidable relations. Also the link `well_founded R -> hwf R`
-  assumes decidability of `R`. This is not needed for Hwf. However, the
+  assumes decidability of `R`. This is not needed for `Hwf`. However, the
   proof of Ramsey is very nice and short for `hwf` whereas Berardi
   and Stelia's (B&S) proof for `Hwf` is more complicated and probably incomplete.
 
