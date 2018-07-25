@@ -104,7 +104,7 @@ where "x≼y" := (sublist x y).
 Definition GOOD R l := ∀m, ∃k, k ≼ l /\ R (rev k++m).
 
 Theorem AF_bar_lift_eq R l : AF (R⇑l) <-> bar (GOOD R) l
-where "R⇑[x1;...xn]" := (R↑xn...↑x1).
+where "R⇑[x1;...;xn]" := (R↑xn...↑x1).
 ```
 
 * The following results for binary almost full relations
@@ -128,7 +128,7 @@ Inductive good R : list X -> Prop :=
   | in_good_1 : ∀ ll a, good R ll -> good R (a::ll).
 
 Theorem af_bar_lift_eq R l : af (R⇑l) <-> bar (good R) l
-where "R⇑[x1;...xn]" := (R↑xn...↑x1).
+where "R⇑[x1;...;xn]" := (R↑xn...↑x1).
 ```
 
 ### Applications to finitary and binary Homogeneous Well-founded relations
@@ -178,7 +178,7 @@ Inductive homogeneous : list X -> Prop :=
   | in_homogeneous_1 : ∀ x l, homogeneous R l -> Forall (R x) l -> homogeneous R (x::l).
 
 Theorem hwf_bar_lift_eq R l : hwf (R⇓l) <-> bar (fun x => ~ homogeneous R x) l
-where "R⇓[x1;...xn]" := (R↓xn...↓x1).
+where "R⇓[x1;...;xn]" := (R↓xn...↓x1).
 
 Definition extends {X} (l m : list X) := ∃x, l = x::m.
 
