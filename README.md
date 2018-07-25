@@ -1,6 +1,6 @@
-## Ramsey's theorem in Type Theory
+# Ramsey's theorem in Type Theory and applications
 
-### Copyright
+## Copyright
 
 ```
 (**************************************************************)
@@ -71,7 +71,8 @@ Theorem Ramsey_lattice r s : US r -> US s -> UF r -> UF s -> UF (r⊓s).
 ```
 ### Applications to finitary and binary Almost Full relations
 
-* The following results can be found in the file [AF.v](src/AF.v)
+* The following results for finitary almost full relations
+  can be found in the file [AF.v](src/AF.v)
 
 ```coq
 Variable X : Type.
@@ -100,16 +101,35 @@ where "R↑x" := (fun l => R l \/ R (x::l)).
 Definition GOOD R l := ∀m, ∃k, k ≼ l /\ R (rev k++m).
 
 Theorem AF_bar_lift_eq R l : AF (R⇑l) <-> bar (GOOD R) l
-where "R⇑[x1;...xn]" := (R↑xn...↑x1)
+where "R⇑[x1;...xn]" := (R↑xn...↑x1).
 
 Theorem AF_Ramsey R S : Ar R -> Ar S -> AF R -> AF S -> AF (R∩S)
-where "R∩S" := (fun l => R l /\ S l)..
+where "R∩S" := (fun l => R l /\ S l).
 ```
- 
 
-This repository also contains applications of the abstract
-  Ramsey theorem to finitary and binary relations, both
-  for  (`af`) and
+* The following results for binary almost full relations
+  can be found in the file [af.v](src/af.v)
+
+```coq
+
+Variable (X : Type).
+Implicit Type (R S : X -> X -> Prop).
+
+Inductive af R : Prop :=
+  | in_af_0 : (∀ a b, R a b) -> af R
+  | in_af_1 : (∀x, af (R↑x)) -> af R
+where "R↑x" := (fun a b => R a b \/ R x a).
+
+Inductive good R : list X -> Prop := 
+  | in_good_0 : ∀ ll a b, In b ll -> R b a -> good R (a::ll)
+  | in_good_1 : ∀ ll a, good R ll -> good R (a::ll).
+
+Theorem af_bar_lift_eq R l : af (R⇑l) <-> bar (good R) l
+where "R⇑[x1;...xn]" := (R↑xn...↑x1).
+
+Theorem af_ramsey R S : af R -> af S -> af (R∩S)
+where "R∩S" := (fun a b => R a b /\ S a b).
+```
 
 ### Applications to finitary and binary Homogeneous Well-founded relations
 
