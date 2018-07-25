@@ -18,22 +18,26 @@
 * This repository contains a constructive Coq implementation of
   the [direct and abstract proof of Ramsey's 
   theorem](http://www.cse.chalmers.se/~coquand/ramsey2.pdf)
-  by T. Coquand. The corresponding file is [src/ramsey_paper.v]
+  by T. Coquand. The corresponding file is (src/ramsey_paper.v)
   and it show the following result is the distributive
   lattice `(Σ,⊑,⊔,⊓,⊥,⊤)` with an operator 
   `op : X -> Σ -> Σ` such that `op x` is a lattice
-  morphism for any `x`
+  morphism for any `x`. We denote `op x a` by `a⋅x` as in
+  the paper.
+
+* The following code succinctly describes the abstract
+  Ramsey theorem in Coq formalism.
  
 ```coq
+Inductive US (a : Σ) : Prop :=
+  | in_US_0 : (∀x, a⋅x ≡ a)    -> US a
+  | in_US_1 : (∀x, US (a⋅x))   -> US a.
 
-Inductive US a : Prop :=
-  | in_US_0 : (∀x, a⋅x ≡ a)  -> US a
-  | in_US_1 : (∀x, US (a⋅x)) -> US a.
+Inductive UF (a : Σ) : Prop :=
+  | in_UF_0 : a ≡ ⊤            -> UF a
+  | in_UF_1 : (∀x, UF (a⊔a⋅x)) -> UF a.
 
-Inductive UF a : Prop := 
-  | in_UF_0 : a ≡ ⊤           -> UF a
-  | in_UF_1 : (∀x, UF (a[x])) -> UF a.
-
+Theorem Ramsey_lattice r s : US r -> US s -> UF r -> UF s -> UF (r⊓s).
 ```
 
 ### Bibliography
