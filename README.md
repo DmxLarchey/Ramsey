@@ -44,7 +44,10 @@
   * a bounded distributive lattice `(Σ,⊑,⊔,⊓,⊥,⊤)`
   * an operator `op : X -> Σ -> Σ` s.t. `op x` is a lattice
     morphism for any `x`. 
-  * we denote `op x a` by `a⋅x` as in the paper.
+  * `Σ` represents a lattice of relations and
+    `⊤` represents the full relation. 
+  * we denote `op x a` by `a⋅x` as in the paper
+    and `x ≡ y` denotes `x ⊑ y /\ y ⊑ x`.
 
 ```coq
 Inductive US (a : Σ) : Prop :=
@@ -58,12 +61,11 @@ Inductive UF (a : Σ) : Prop :=
 Theorem Ramsey_lattice r s : US r -> US s -> UF r -> UF s -> UF (r⊓s).
 ```
 
-* `US` stands for *ultimately stable* and means that repeated 
+* `US` stands for *ultimately stable*: repeated 
   applications of `op x` always leads to a fixpoint.
 
-* `UF` stands for *ultimately full* and means that repeated
-  applications of `a ↦ a⊔a⋅x` always leads to `⊤` (i.e. the full
-  element of the lattice).
+* `UF` stands for *ultimately full*: repeated
+  applications of `a ↦ a⊔a⋅x` always leads to `⊤`.
 
 ### Applications to finitary and binary Almost Full relations
 
