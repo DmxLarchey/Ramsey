@@ -71,8 +71,7 @@ Theorem Ramsey_lattice r s : US r -> US s -> UF r -> UF s -> UF (r⊓s).
 ```
 ### Applications to finitary and binary Almost Full relations
 
-* The following results can be found in the files
-  [AF.v](src/AF.v)
+* The following results can be found in the file [AF.v](src/AF.v)
 
 ```coq
 Variable X : Type.
@@ -88,17 +87,23 @@ Inductive bar P l : Prop :=
   | in_bar_0 : P l                 -> bar P l
   | in_bar_1 : (∀ x, bar P (x::l)) -> bar P l.
 
+Inductive Ar R : Prop :=
+  | in_Ar_0 : (∀ x l, R (x::l) <-> R l) -> Ar R
+  | in_Ar_1 : (∀ x, Ar (R⋅x))           -> Ar R
+where "R⋅x" := (fun l => R (x::l)).
+    
 Inductive AF (R : list X -> Prop) : Prop := 
   | in_AF_0 : (∀x, R x)      -> AF R
   | in_AF_1 : (∀x, AF (R↑x)) -> AF R
-where "R↑x" := (fun l => R (x::l)).
+where "R↑x" := (fun l => R l \/ R (x::l)).
 
 Definition GOOD R l := ∀m, ∃k, k ≼ l /\ R (rev k++m).
 
 Theorem AF_bar_lift_eq R l : AF (R⇑l) <-> bar (GOOD R) l
 where "R⇑[x1;...xn]" := (R↑xn...↑x1)
 
-
+Theorem AF_Ramsey R S : Ar R -> Ar S -> AF R -> AF S -> AF (R∩S)
+where "R∩S" := (fun l => R l /\ S l)..
 ```
  
 
