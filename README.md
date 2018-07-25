@@ -13,24 +13,34 @@
 (**************************************************************)
 ```
 
-### What is this repository for? ###
+### What is this repository for? 
 
-* This repository is a Coq implementation and total correctness
-  proof of L. Paulson If-Then-Else normalisation which is a nested
-  recursive algorithm with a complicated scheme.
+* This repository contains a constructive Coq implementation of
+  the [direct and abstract proof of Ramsey's 
+  theorem](http://www.cse.chalmers.se/~coquand/ramsey2.pdf)
+  by T. Coquand. The corresponding file is [src/ramsey_paper.v]
+  and it show the following result is the distributive
+  lattice `(Σ,⊑,⊔,⊓,⊥,⊤)` with an operator 
+  `op : X -> Σ -> Σ` such that `op x` is a lattice
+  morphism for any `x`
+ 
+```coq
 
-```ocaml
-type Ω = α | ω of Ω * Ω * Ω
+Inductive US a : Prop :=
+  | in_US_0 : (∀x, a⋅x ≡ a)  -> US a
+  | in_US_1 : (∀x, US (a⋅x)) -> US a.
 
-let rec nm e = match e with
-  | α                => α
-  | ω (α,y,z)        => ω (α,nm y,nm z)
-  | ω (ω(a,b,c),y,z) => nm (ω (a,nm (ω (b,y,z)),nm (ω (c,y,z)))
+Inductive UF a : Prop := 
+  | in_UF_0 : a ≡ ⊤           -> UF a
+  | in_UF_1 : (∀x, UF (a[x])) -> UF a.
+
 ```
 
+### Bibliography
 
-* The paper [Simulating Induction-Recursion for Partials Algorithms](http://www.loria.fr/~larchey/papers/TYPES_2018_paper_19.pdf)
-  submitted to [TYPES 2018](http://w3.math.uminho.pt/types2018) describes the technique. 
+* The draft paper [A direct proof of Ramsey’s Theorem](http://www.cse.chalmers.se/~coquand/ramsey2.pdf) by Thierry Coquand.
+* The paper [An intuitionistic version of Ramsey's Theorem and its use in Program 
+Termination](https://doi.org/10.1016/j.apal.2015.08.002) by Stefano Berardi and Silvia Steila.
 
 ### What does it contains
 
