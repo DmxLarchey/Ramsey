@@ -31,25 +31,28 @@
   for [*almost full relations*]((https://doi.org/10.1.1.225.3021) (`af`) and 
   for [*homogeneous well-founded relations*](https://doi.org/10.1016/j.apal.2015.08.002)
   (`hwf`).
-  It contains two definitions of binary `hwf` relations: 
 
-    * one by direct induction similar to the inductive definition of
-      the `af` predicate. `R` is binary relation of type
+* It contains two definitions of binary `hwf` relations: 
+  
+    * one by direct induction similar to the *inductive definition* of
+      the `af R` predicate where `R` is binary relation of type
       `R : X -> X -> Prop`.
+
+    * one corresponding to the original definition of Berardi as
+      *list extension is well-founded on `R`-homogenous lists*.
+ 
+* We show the equivalence of those two definitions under the assumption
+  of the logical decidability of `R`.
 
 ```coq
 
 Inductive hwf R : Prop :=
-  | in_hwf_0 : (forall a b, ~ R a b) -> hwf R
-  | in_hwf_1 : (forall x, hwf (R↓x)) -> hwf R
+  | in_hwf_0 : (∀ a b, ~ R a b) -> hwf R
+  | in_hwf_1 : (∀ x, hwf (R↓x)) -> hwf R
 where "R ↓ x" := (fun a b => R a b /\ R b x).
 
-```
-
-* one corresponding to the original definition of Berardi as
-      *list extension is well-founded on `R`-homogenous lists*.
- 
-```coq
+Theorem hwf_Ramsey R S : hwf R -> hwf S -> hwf (R∪S)
+where "R ∪ S" := (fun x y => R x y \/ S x y).
 
 Inductive homogeneous : list X -> Prop :=
   | in_homogeneous_0 : homogeneous R nil
@@ -60,10 +63,10 @@ Definition extends {X} (l m : list X) := exists x, l = x::m.
 Definition Hwf R := well_founded (extends⬇(homogeneous R))
 where "R ⬇ P" := (fun x y => R (proj1_sig x) (proj1_sig y)).
 
-```
+Theorem hwf_Hwf R : hwf R -> Hwf R.
 
-* We show `hwf ⊆ Hwf` and also `Hwf R -> hwf R` when `R` is logically
-  decidable. 
+Theorem Hwf_hwf R : (∀ x y, R x y \/ ~ R x y) -> Hwf R -> hwf R.
+```
 
 ### Some more
 
