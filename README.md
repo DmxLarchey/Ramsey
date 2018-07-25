@@ -28,14 +28,14 @@
   and to finitary and binary 
   [*homogeneous well-founded relations*](https://doi.org/10.1016/j.apal.2015.08.002).
   We establish the link between the direct inductive definition of
-  homogeneous well-founded and Berardi and Steila's characterization
+  homogeneous well-founded and of Berardi and Steila's characterization
   using the `well_founded` predicate.
 
 * We leave some open questions regarding the generalization of
   the abstract proof to poset-indexed families of relations
   and to the proof of the *indexed Higman's theorem* leading
-  to as shorter proof of *Kruskal's tree theorem* following an
-  unpublished draft by T. Coquand.
+  to a shorter proof of *Kruskal's tree theorem* (following an
+  unpublished draft by T. Coquand).
 
 ### The direct and abstract proof of Ramsey's theorem (see [ramsey_paper.v](src/ramsey_paper.v))
 
@@ -76,7 +76,7 @@ Theorem Ramsey_lattice r s : US r -> US s -> UF r -> UF s -> UF (r⊓s).
 
 ```coq
 Variable X : Type.
-Implicit Types (R S P : list X -> Prop) (l :list X).
+Implicit Type (R S P : list X -> Prop) (l :list X).
 
 Inductive bar P l : Prop :=
   | in_bar_0 : P l                 -> bar P l
@@ -138,7 +138,7 @@ where "R⇑[x1;...xn]" := (R↑xn...↑x1).
 
 ```coq
 Variable X : Type.
-Implicit Types (R S P : list X -> Prop) (l :list X).
+Implicit Type (R S P : list X -> Prop) (l :list X).
 
 Inductive HWF R : Prop := 
   | in_HWF_0 : (∀x, ~ R x)     -> HWF R
