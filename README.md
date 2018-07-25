@@ -60,11 +60,13 @@ Inductive UF (a : Σ) : Prop :=
 Theorem Ramsey_lattice r s : US r -> US s -> UF r -> UF s -> UF (r⊓s).
 ```
 
-* `US` stands for *ultimately stable*: repeated 
-  applications of `op x` always leads to a fixpoint.
-
-* `UF` stands for *ultimately full*: repeated
-  applications of `a ↦ a⊔a⋅x` always leads to `⊤`.
+* We follow very carefully the proof arguments of T. Coquand
+  but because the theorem is applied more widely, we substitute
+  `US` for `Ar` (arity) and `UF` for  `AF` (almost full):
+  * `US` stands for *ultimately stable*: repeated 
+     applications of `op x` always leads to a fixpoint.
+  * `UF` stands for *ultimately full*: repeated
+    applications of `a ↦ a⊔a⋅x` always leads to `⊤`.
 
 ### Applications to finitary and binary Almost Full relations
 
