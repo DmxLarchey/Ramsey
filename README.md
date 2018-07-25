@@ -190,10 +190,36 @@ Theorem hwf_Hwf R : hwf R -> Hwf R.
 Theorem Hwf_hwf R : (∀ x y, R x y \/ ~ R x y) -> Hwf R -> hwf R.
 ```
 
-### Some more
+## Remaining questions (unsorted brainstorming)
 
+* Which definition is best, `Hwf` or `hwf` given that Hwf is a bit weaker
+  for non-decidable relations. Also the link `well_founded R -> hwf R`
+  assumes decidability of `R`. This is not needed for Hwf. However, the
+  proof of Ramsey is very nice and short for `hwf` whereas Berardi
+  and Stelia's proof for `Hwf` is more complicated and probably incomplete.
 
-## Bibliography
+* Indeed, B&S proof represents trees as predicates over branches and
+  thus, it is not possible to decide whereas a tree is empty or not.
+  However, this case distinction is used in the proof. Maybe changing
+  the representation of trees is necessary for the proof to be implemented.
+
+* Is it possible to generalize the abstract Ramsey's proof to deal with
+  poset-indexed families of relations? What could be a definition of
+  `AF` or `GOOD` in that case? T. Coquand's proof of the *variable Ramsey
+  theorem* seems to be based on `bar` inductive predicates. A proof of
+  the non-variable case of Ramsey's theorem using `bar` can be found
+  in Daniel Fridlender's thesis but it is more complicated to understand.
+
+* Of course the ultimate objective is a shorter mechanized proof of
+  [Kruskal's tree theorem](http://www.loria.fr/~larchey/Kruskal).
+
+## Links and practical information
+
+### How do I set it up? ###
+
+* This should compile with Coq 8.6+ with `cd src; make af.vo hwf.vo`.
+
+### Bibliography
 
 * The draft paper [A direct proof of Ramsey’s Theorem](http://www.cse.chalmers.se/~coquand/ramsey2.pdf) by Thierry Coquand.
 
@@ -203,12 +229,6 @@ Theorem Hwf_hwf R : (∀ x y, R x y \/ ~ R x y) -> Hwf R -> hwf R.
 
 * The paper [Stop when you are Almost-Full](https://doi.org/10.1.1.225.3021) 
   by Dimitrios Vytiniotis, Thierry Coquand and David Wahlstedt.
-
-### What does it contains
-
-### How do I set it up? ###
-
-* This should compile with Coq 8.6+ with `cd src; make af.vo hwf.vo`.
 
 ### Who do I talk to? ###
 
