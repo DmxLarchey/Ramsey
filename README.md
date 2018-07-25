@@ -40,11 +40,11 @@
 
 ### The direct and abstract proof of Ramsey's theorem
 
-* We show the following result is a distributive
-  lattice `(Σ,⊑,⊔,⊓,⊥,⊤)` with an operator 
-  `op : X -> Σ -> Σ` such that `op x` is a lattice
-  morphism for any `x`. We denote `op x a` by `a⋅x` as in
-  the paper.
+* We show the following result given:
+  * a bounded distributive lattice `(Σ,⊑,⊔,⊓,⊥,⊤)`
+  * an operator `op : X -> Σ -> Σ` s.t. `op x` is a lattice
+    morphism for any `x`. 
+  * we denote `op x a` by `a⋅x` as in the paper.
 
 ```coq
 Inductive US (a : Σ) : Prop :=
