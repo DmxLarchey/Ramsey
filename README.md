@@ -58,20 +58,51 @@
 
 ```coq
 Inductive US (a : Σ) : Prop :=
-  | in_US_0 : (∀x, a⋅x ≡ a)    -> US a
-  | in_US_1 : (∀x, US (a⋅x))   -> US a.
+  | in_US_0 : (∀x, a⋅x ≡ a)   -> US a
+  | in_US_1 : (∀x, US (a⋅x))  -> US a
+where "a⋅x" := (op x a).
 
 Inductive UF (a : Σ) : Prop :=
-  | in_UF_0 : a ≡ ⊤            -> UF a
-  | in_UF_1 : (∀x, UF (a⊔a⋅x)) -> UF a.
+  | in_UF_0 : a ≡ ⊤           -> UF a
+  | in_UF_1 : (∀x, UF (a[x])) -> UF a
+where "a[x]" := (a⊔a⋅x).
 
 Theorem Ramsey_lattice r s : US r -> US s -> UF r -> UF s -> UF (r⊓s).
 ```
-
-
 ### Applications to finitary and binary Almost Full relations
 
-* This repository also contains applications of the abstract
+* The following results can be found in the files
+  [AF.v](src/AF.v)
+
+```coq
+Variable X : Type.
+Implicit Types (R S P : list X -> Prop) (l :list X).
+
+Inductive sublist : list X -> list X -> Prop :=
+  | in_sl_0 : ∀ ll, nil ≼ ll
+  | in_sl_1 : ∀ a ll mm, ll ≼ mm -> a::ll ≼ a::mm
+  | in_sl_2 : ∀ a ll mm, ll ≼ mm -> ll ≼ a::mm
+where "x≼y" := (sublist x y).
+
+Inductive bar P l : Prop :=
+  | in_bar_0 : P l                 -> bar P l
+  | in_bar_1 : (∀ x, bar P (x::l)) -> bar P l.
+
+Inductive AF (R : list X -> Prop) : Prop := 
+  | in_AF_0 : (∀x, R x)      -> AF R
+  | in_AF_1 : (∀x, AF (R↑x)) -> AF R
+where "R↑x" := (fun l => R (x::l)).
+
+Definition GOOD R l := ∀m, ∃k, k ≼ l /\ R (rev k++m).
+
+Theorem AF_bar_lift_eq R l : AF (R⇑l) <-> bar (GOOD R) l
+where "R⇑[x1;...xn]" := (R↑xn...↑x1)
+
+
+```
+ 
+
+This repository also contains applications of the abstract
   Ramsey theorem to finitary and binary relations, both
   for  (`af`) and
 
