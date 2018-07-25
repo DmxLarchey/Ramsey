@@ -28,8 +28,38 @@
 
 * This repository also contains applications of the abstract
   Ramsey theorem to finitary and binary relations, both
-  for [*almost full relations*]((https://doi.org/10.1.1.225.3021) and 
-  for [*homogeneous well-founded relations*](https://doi.org/10.1016/j.apal.2015.08.002).
+  for [*almost full relations*]((https://doi.org/10.1.1.225.3021) (`af`) and 
+  for [*homogeneous well-founded relations*](https://doi.org/10.1016/j.apal.2015.08.002)
+  (`hwf`).
+  It contains two definitions of binary `hwf` relations: 
+
+    * one by direct induction similar to the inductive definition of
+      the `af` predicate. `R` is binary relation of type
+      `R : X -> X -> Prop`.
+
+```coq
+Inductive hwf R : Prop :=
+  | in_hwf_0 : (forall a b, ~ R a b) -> hwf R
+  | in_hwf_1 : (forall x, hwf (R↓x)) -> hwf R
+where "R ↓ x" := (fun a b => R a b /\ R b x).
+```
+    * one corresponding to the original definition of Berardi as
+      *list extension is well-founded on `R`-homogenous lists*.
+ 
+``coq
+Inductive homogeneous : list X -> Prop :=
+  | in_homogeneous_0 : homogeneous R nil
+  | in_homogeneous_1 : ∀ x l, homogeneous R l -> Forall (R x) l -> homogeneous R (x::l).
+
+Definition extends {X} (l m : list X) := exists x, l = x::m.
+
+Definition Hwf R := well_founded (extends⬇(homogeneous R)).
+```
+
+* We show `hwf ⊆ Hwf` and also `Hwf R -> hwf R` when `R` is logically
+  decidable. 
+
+### Some more
 
 * The following code succinctly describes the abstract
   Ramsey theorem in Coq formalism.
