@@ -222,7 +222,7 @@ Theorem hwf_af_eq : hwf R <-> af (fun x y => ~ R y x).
   the non-variable case of Ramsey's theorem using `bar` can be found
   in Daniel Fridlender's thesis but it is more complicated to understand.
 
-* Of course the ultimate objective is a shorter mechanized proof of
+* Of course the ultimate goal is a shorter mechanized proof of
   [Kruskal's tree theorem](http://www.loria.fr/~larchey/Kruskal).
 
 ## Links and practical information
