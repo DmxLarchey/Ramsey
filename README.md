@@ -156,7 +156,7 @@ where "R∪S" := (fun l => R l \/ S l).
   two definitions of binary HWF relations: 
   * one by direct induction similar to the *inductive definition* of
     the previous `af R` predicate. 
-  * one corresponding to the definition of Berardi and Stelia 
+  * one corresponding to the definition of Berardi and Steila 
     as *list extension is well-founded on homogeneous lists*.
 * We show the equivalence of those two definitions under the assumption
   of the logical decidability of `R`.
@@ -196,7 +196,7 @@ Theorem Hwf_hwf R : (∀ x y, R x y \/ ~ R x y) -> Hwf R -> hwf R.
   for non-decidable relations. Also the link `well_founded R -> hwf R`
   assumes decidability of `R`. This is not needed for `Hwf`. However, the
   proof of Ramsey is very nice and short for `hwf` whereas Berardi
-  and Stelia's (B&S) proof for `Hwf` is more complicated and probably incomplete.
+  and Steila's (B&S) proof for `Hwf` is more complicated and probably incomplete.
 
 * Indeed, B&S proof represents trees as predicates over branches and
   thus, it is not possible to decide whereas a tree is empty or not.
