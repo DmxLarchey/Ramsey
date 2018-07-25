@@ -20,17 +20,15 @@
   theorem](http://www.cse.chalmers.se/~coquand/ramsey2.pdf)
   by T. Coquand. The corresponding file is 
   [ramsey_paper.v](src/ramsey_paper.v).
-
-* It also contains some of the definitions and result of the
+  It also contains some of the definitions and result of the
   [intuitionistic version of Ramsey's Theorem](https://doi.org/10.1016/j.apal.2015.08.002) 
   by S. Berardi and S. Steila.
 
 * We apply the theorem to finitary and binary 
-  [*almost full relations*]((https://doi.org/10.1.1.225.3021), 
+  [*almost full relations*](https://doi.org/10.1.1.225.3021), 
   and to finitary and binary 
   [*homogeneous well-founded relations*](https://doi.org/10.1016/j.apal.2015.08.002).
-
-* We establish the link between the direct inductive definition of
+  We establish the link between the direct inductive definition of
   homogeneous well-founded and Berardi and Steila's characterization
   using the `well_founded` predicate.
 
