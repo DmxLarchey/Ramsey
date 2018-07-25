@@ -190,6 +190,18 @@ Theorem hwf_Hwf R : hwf R -> Hwf R.
 Theorem Hwf_hwf R : (∀ x y, R x y \/ ~ R x y) -> Hwf R -> hwf R.
 ```
 
+### Link between the `af` and `hwf` predicates
+
+* In the file [af_hwf.v](src/af_hwf.v), the following equivalences are
+  proved for logically decidable relations.
+
+```coq
+Variables (R : X -> X -> Prop) (HR : ∀ x y, R x y \/ ~ R x y).
+
+Theorem af_hwf_eq : af R <-> hwf (fun x y => ~ R y x).
+Theorem hwf_af_eq : hwf R <-> af (fun x y => ~ R y x).
+```
+
 ## Remaining questions (unsorted brainstorming)
 
 * Which definition is best, `Hwf` or `hwf` given that Hwf is a bit weaker
