@@ -18,7 +18,8 @@
 * This repository contains a constructive Coq implementation of
   the [direct and abstract proof of Ramsey's 
   theorem](http://www.cse.chalmers.se/~coquand/ramsey2.pdf)
-  by T. Coquand. The corresponding file is (src/ramsey_paper.v)
+  by T. Coquand. The corresponding file is 
+  [ramsey_paper.v](src/ramsey_paper.v)
   and it show the following result is the distributive
   lattice `(Σ,⊑,⊔,⊓,⊥,⊤)` with an operator 
   `op : X -> Σ -> Σ` such that `op x` is a lattice
@@ -39,6 +40,13 @@ Inductive UF (a : Σ) : Prop :=
 
 Theorem Ramsey_lattice r s : US r -> US s -> UF r -> UF s -> UF (r⊓s).
 ```
+
+  `US` stands for *ultimately stable* and means that repeated 
+  applications of `op x` always leads to a fixpoint.
+
+  `UF` stands for *ultimately full* and means that repeated
+  applications of `fun a => a⊔a⋅x` always leads to `⊤` (i.e. the full
+  element of the lattice).
 
 ### Bibliography
 
