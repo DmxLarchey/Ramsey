@@ -180,7 +180,7 @@ Inductive homogeneous : list X -> Prop :=
 Theorem hwf_bar_lift_eq R l : hwf (R⇓l) <-> bar (fun x => ~ homogeneous R x) l
 where "R⇓[x1;...xn]" := (R↓xn...↓x1).
 
-Definition extends {X} (l m : list X) := exists x, l = x::m.
+Definition extends {X} (l m : list X) := ∃x, l = x::m.
 
 Definition Hwf R := well_founded (extends⬇(homogeneous R))
 where "R⬇P" := (fun x y => R (proj1_sig x) (proj1_sig y)).
