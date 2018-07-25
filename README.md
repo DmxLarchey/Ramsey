@@ -196,7 +196,7 @@ Theorem Hwf_hwf R : (∀ x y, R x y \/ ~ R x y) -> Hwf R -> hwf R.
   for non-decidable relations. Also the link `well_founded R -> hwf R`
   assumes decidability of `R`. This is not needed for Hwf. However, the
   proof of Ramsey is very nice and short for `hwf` whereas Berardi
-  and Stelia's proof for `Hwf` is more complicated and probably incomplete.
+  and Stelia's (B&S) proof for `Hwf` is more complicated and probably incomplete.
 
 * Indeed, B&S proof represents trees as predicates over branches and
   thus, it is not possible to decide whereas a tree is empty or not.
