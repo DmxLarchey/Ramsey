@@ -92,6 +92,9 @@ Inductive AF (R : list X -> Prop) : Prop :=
   | in_AF_1 : (∀x, AF (R↑x)) -> AF R
 where "R↑x" := (fun l => R l \/ R (x::l)).
 
+Theorem AF_Ramsey R S : Ar R -> Ar S -> AF R -> AF S -> AF (R∩S)
+where "R∩S" := (fun l => R l /\ S l).
+
 Inductive sublist : list X -> list X -> Prop :=
   | in_sl_0 : ∀ ll, nil ≼ ll
   | in_sl_1 : ∀ a ll mm, ll ≼ mm -> a::ll ≼ a::mm
@@ -102,9 +105,6 @@ Definition GOOD R l := ∀m, ∃k, k ≼ l /\ R (rev k++m).
 
 Theorem AF_bar_lift_eq R l : AF (R⇑l) <-> bar (GOOD R) l
 where "R⇑[x1;...xn]" := (R↑xn...↑x1).
-
-Theorem AF_Ramsey R S : Ar R -> Ar S -> AF R -> AF S -> AF (R∩S)
-where "R∩S" := (fun l => R l /\ S l).
 ```
 
 * The following results for binary almost full relations
@@ -120,21 +120,36 @@ Inductive af R : Prop :=
   | in_af_1 : (∀x, af (R↑x)) -> af R
 where "R↑x" := (fun a b => R a b \/ R x a).
 
+Theorem af_ramsey R S : af R -> af S -> af (R∩S)
+where "R∩S" := (fun a b => R a b /\ S a b).
+
 Inductive good R : list X -> Prop := 
   | in_good_0 : ∀ ll a b, In b ll -> R b a -> good R (a::ll)
   | in_good_1 : ∀ ll a, good R ll -> good R (a::ll).
 
 Theorem af_bar_lift_eq R l : af (R⇑l) <-> bar (good R) l
 where "R⇑[x1;...xn]" := (R↑xn...↑x1).
-
-Theorem af_ramsey R S : af R -> af S -> af (R∩S)
-where "R∩S" := (fun a b => R a b /\ S a b).
 ```
 
 ### Applications to finitary and binary Homogeneous Well-founded relations
 
 * The following results for finitary homogeneous well-founded relations
-  can be found in the file [HWF.v](src/HWF.v)
+  can be found in the file [HWF.v](src/HWF.v).
+
+```coq
+Variable X : Type.
+Implicit Types (R S P : list X -> Prop) (l :list X).
+
+Inductive HWF R : Prop := 
+  | in_HWF_0 : (∀x, ~ R x)     -> HWF R
+  | in_HWF_1 : (∀x, HWF (R↓x)) -> HWF R
+where "R↓x" := (fun l => R l /\ R (l++x::nil)).
+
+Definition Ar_tail R := Ar (fun l => R (rev l)).
+
+Theorem HWF_Ramsey R S : Ar_tail R -> Ar_tail S -> HWF R -> HWF S -> HWF (R∪S)
+where "R∪S" := (fun l => R l \/ S l).
+```
 
 * The following results for binary homogeneous well-founded relations
   can be found in the file [hwf.v](src/hwf.v). We propose 
@@ -142,11 +157,13 @@ where "R∩S" := (fun a b => R a b /\ S a b).
   * one by direct induction similar to the *inductive definition* of
     the previous `af R` predicate. 
   * one corresponding to the definition of Berardi and Stelia 
-    as *list extension is well-founded on `R`-homogenous lists*.
+    as *list extension is well-founded on homogeneous lists*.
 * We show the equivalence of those two definitions under the assumption
   of the logical decidability of `R`.
 
 ```coq
+Variable (X : Type).
+Implicit Type (R S : X -> X -> Prop).
 
 Inductive hwf R : Prop :=
   | in_hwf_0 : (∀ a b, ~ R a b) -> hwf R
