@@ -46,7 +46,7 @@ where "R ↓ x" := (fun a b => R a b /\ R b x).
 
 ```
 
-    * one corresponding to the original definition of Berardi as
+* one corresponding to the original definition of Berardi as
       *list extension is well-founded on `R`-homogenous lists*.
  
 ```coq
@@ -57,7 +57,8 @@ Inductive homogeneous : list X -> Prop :=
 
 Definition extends {X} (l m : list X) := exists x, l = x::m.
 
-Definition Hwf R := well_founded (extends⬇(homogeneous R)).
+Definition Hwf R := well_founded (extends⬇(homogeneous R))
+where "R ⬇ P" := (fun x y => R (proj1_sig x) (proj1_sig y)).
 
 ```
 
