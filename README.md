@@ -204,7 +204,7 @@ Theorem hwf_af_eq : hwf R <-> af (fun x y => ~ R y x).
 
 ## Remaining questions (unsorted brainstorming)
 
-* Which definition is best, `Hwf` or `hwf` given that Hwf is a bit weaker
+* Which definition is best, `Hwf` or `hwf` given that `Hwf` is a bit weaker
   for non-decidable relations. Also the link `well_founded R -> hwf R`
   assumes decidability of `R`. This is not needed for `Hwf`. However, the
   proof of Ramsey is very nice and short for `hwf` whereas Berardi
