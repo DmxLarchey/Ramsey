@@ -26,6 +26,11 @@
   morphism for any `x`. We denote `op x a` by `a⋅x` as in
   the paper.
 
+* This repository also contains applications of the abstract
+  Ramsey theorem to finitary and binary relations, both
+  for [*almost full relations*]((https://doi.org/10.1.1.225.3021) and 
+  for [*homogeneous well-founded relations*](https://doi.org/10.1016/j.apal.2015.08.002).
+
 * The following code succinctly describes the abstract
   Ramsey theorem in Coq formalism.
  
@@ -51,8 +56,13 @@ Theorem Ramsey_lattice r s : US r -> US s -> UF r -> UF s -> UF (r⊓s).
 ### Bibliography
 
 * The draft paper [A direct proof of Ramsey’s Theorem](http://www.cse.chalmers.se/~coquand/ramsey2.pdf) by Thierry Coquand.
-* The paper [An intuitionistic version of Ramsey's Theorem and its use in Program 
-Termination](https://doi.org/10.1016/j.apal.2015.08.002) by Stefano Berardi and Silvia Steila.
+
+* The paper 
+ [An intuitionistic version of Ramsey's Theorem and its use in Program Termination](https://doi.org/10.1016/j.apal.2015.08.002) 
+  by Stefano Berardi and Silvia Steila.
+
+* The paper [Stop when you are Almost-Full](https://doi.org/10.1.1.225.3021) 
+  by Dimitrios Vytiniotis, Thierry Coquand and David Wahlstedt.
 
 ### What does it contains
 
@@ -63,4 +73,5 @@ Termination](https://doi.org/10.1016/j.apal.2015.08.002) by Stefano Berardi and 
 ### Who do I talk to? ###
 
 * This project was created by [Dominique Larchey-Wendling](http://www.loria.fr/~larchey)
+
 
