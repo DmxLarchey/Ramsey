@@ -141,7 +141,7 @@ where "R∩S" := (fun a b => R a b /\ S a b).
   two definitions of binary HWF relations: 
   * one by direct induction similar to the *inductive definition* of
     the previous `af R` predicate. 
-  * one corresponding to the original definition of Berardi and Stelia 
+  * one corresponding to the definition of Berardi and Stelia 
     as *list extension is well-founded on `R`-homogenous lists*.
 * We show the equivalence of those two definitions under the assumption
   of the logical decidability of `R`.
