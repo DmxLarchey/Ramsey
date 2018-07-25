@@ -39,7 +39,7 @@
 
 ### The direct and abstract proof of Ramsey's theorem (see [ramsey_paper.v](src/ramsey_paper.v))
 
-* We show the following `Ramsey_lattice` result given:
+* We show the following `Ramsey_lattice` result below. Given:
   * a bounded distributive lattice `(Σ,⊑,⊔,⊓,⊥,⊤)`
   * an operator `op : X -> Σ -> Σ` s.t. `op x` is a lattice
     morphism for any `x`. 
@@ -47,6 +47,14 @@
     `⊤` represents the full relation. 
   * we denote `op x a` by `a⋅x` as in the paper
     and `x ≡ y` denotes `x ⊑ y /\ y ⊑ x`.
+
+* We follow very carefully the proof arguments of T. Coquand
+  but because the theorem is applied more widely, we substitute
+  `US` for `Ar` (arity) and `UF` for  `AF` (almost full):
+  * `US` stands for *ultimately stable*: repeated 
+     applications of `op x` always leads to a fixpoint.
+  * `UF` stands for *ultimately full*: repeated
+    applications of `a ↦ a⊔a⋅x` always leads to `⊤`.
 
 ```coq
 Inductive US (a : Σ) : Prop :=
@@ -60,13 +68,6 @@ Inductive UF (a : Σ) : Prop :=
 Theorem Ramsey_lattice r s : US r -> US s -> UF r -> UF s -> UF (r⊓s).
 ```
 
-* We follow very carefully the proof arguments of T. Coquand
-  but because the theorem is applied more widely, we substitute
-  `US` for `Ar` (arity) and `UF` for  `AF` (almost full):
-  * `US` stands for *ultimately stable*: repeated 
-     applications of `op x` always leads to a fixpoint.
-  * `UF` stands for *ultimately full*: repeated
-    applications of `a ↦ a⊔a⋅x` always leads to `⊤`.
 
 ### Applications to finitary and binary Almost Full relations
 
