@@ -38,15 +38,19 @@
       `R : X -> X -> Prop`.
 
 ```coq
+
 Inductive hwf R : Prop :=
   | in_hwf_0 : (forall a b, ~ R a b) -> hwf R
   | in_hwf_1 : (forall x, hwf (R↓x)) -> hwf R
 where "R ↓ x" := (fun a b => R a b /\ R b x).
+
 ```
+
     * one corresponding to the original definition of Berardi as
       *list extension is well-founded on `R`-homogenous lists*.
  
-``coq
+```coq
+
 Inductive homogeneous : list X -> Prop :=
   | in_homogeneous_0 : homogeneous R nil
   | in_homogeneous_1 : ∀ x l, homogeneous R l -> Forall (R x) l -> homogeneous R (x::l).
@@ -54,6 +58,7 @@ Inductive homogeneous : list X -> Prop :=
 Definition extends {X} (l m : list X) := exists x, l = x::m.
 
 Definition Hwf R := well_founded (extends⬇(homogeneous R)).
+
 ```
 
 * We show `hwf ⊆ Hwf` and also `Hwf R -> hwf R` when `R` is logically
