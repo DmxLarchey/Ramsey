@@ -18,8 +18,7 @@
 * This repository contains a constructive Coq implementation of
   the [direct and abstract proof of Ramsey's 
   theorem](http://www.cse.chalmers.se/~coquand/ramsey2.pdf)
-  by T. Coquand. The corresponding file is 
-  [ramsey_paper.v](src/ramsey_paper.v).
+  by T. Coquand. 
   It also contains some of the definitions and result of the
   [intuitionistic version of Ramsey's Theorem](https://doi.org/10.1016/j.apal.2015.08.002) 
   by S. Berardi and S. Steila.
@@ -38,9 +37,9 @@
   to as shorter proof of *Kruskal's tree theorem* following an
   unpublished draft by T. Coquand.
 
-### The direct and abstract proof of Ramsey's theorem
+### The direct and abstract proof of Ramsey's theorem (see [ramsey_paper.v](src/ramsey_paper.v))
 
-* We show the following result given:
+* We show the following `Ramsey_lattice` result given:
   * a bounded distributive lattice `(Σ,⊑,⊔,⊓,⊥,⊤)`
   * an operator `op : X -> Σ -> Σ` s.t. `op x` is a lattice
     morphism for any `x`. 
