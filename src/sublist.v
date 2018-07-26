@@ -11,7 +11,7 @@ Require Import List Arith Omega.
 
 Set Implicit Arguments.
 
-Section sublist.
+Section sublist_defs.
 
   Variable X : Type.
 
@@ -49,14 +49,47 @@ Section sublist.
     + intros [[]|]; subst; auto.
   Qed.
   
+End sublist_defs.
+
+Infix "<sl" := (@sublist _) (at level 70).
+
+Hint Constructors sublist.
+Hint Resolve sl_refl sl_cons sl_app_left sl_app_right.
+
+Tactic Notation "sl" "nil" "inv" hyp(H) :=
+  repeat match type of H with
+    | _::_  <sl nil   => rewrite sl_nil_inv in H; discriminate
+    | _     <sl nil   => rewrite sl_nil_inv in H; subst
+  end; auto.
+  
+Tactic Notation "sl" "cons" "inv" hyp(H) "left" :=
+  match type of H with
+    | ?a::_ <sl ?b::_ => rewrite sl_cons_inv in H; destruct H as [ (?&H) | H ]; [ subst a | ]
+  end; auto.
+  
+Tactic Notation "sl" "cons" "inv" hyp(H) "right" :=
+  match type of H with
+    | ?a::_ <sl ?b::_ => rewrite sl_cons_inv in H; destruct H as [ (?&H) | H ]; [ subst b | ]
+  end; auto.
+
+Tactic Notation "sl" "inv" hyp(H) :=
+  repeat match type of H with
+    | _ <sl nil       => sl nil inv H
+    | ?a::_ <sl ?b::_ => sl cons inv H left
+    | ?l    <sl _::_  => destruct l as [ | ? l ]; auto; sl cons inv H left
+    | ?a::_ <sl ?l    => destruct l as [ | ? l ]; auto; sl cons inv H right 
+  end; auto.
+
+Section sublist_props.
+
+  Variable (X : Type).
+  
+  Implicit Type (l ll : list X).
+  
   Fact sl_trans l1 l2 l3 : l1 <sl l2 -> l2 <sl l3 -> l1 <sl l3.
   Proof.
     intros H1 H2; revert H2 l1 H1.
-    induction 1; intros l1 H1; auto.
-    + rewrite sl_nil_inv in H1; subst; auto.
-    + destruct l1 as [ | b l1 ]; auto.
-      rewrite sl_cons_inv in H1.
-      destruct H1 as [[]|]; subst; auto.
+    induction 1; intros ? H1; auto; sl inv H1.
   Qed.
   
   Fact sl_app l1 m1 l2 m2 : l1 <sl l2 -> m1 <sl m2 -> l1++m1 <sl l2++m2.
@@ -70,30 +103,23 @@ Section sublist.
   Fact sublist_nil_inv x l : x::l <sl nil <-> False.
   Proof. split; inversion 1; auto. Qed.
 
-  Fact sublist_inv_cons ll a : ll <sl a::nil <-> ll = nil \/ ll = a::nil.
+  Fact sublist_inv_cons l a : l <sl a::nil <-> l = nil \/ l = a::nil.
   Proof.
-    destruct ll as [ | b ll ].
-    + split; auto.
-    + rewrite sl_cons_inv, sl_nil_inv, sl_nil_inv.
-      split.
-      * intros [ [] | ]; subst; auto; discriminate.
-      * intros [ | H ]; try discriminate.
-        inversion H; subst; auto.
+    split.
+    + intros H; sl inv H.
+    + intros [|]; subst; auto.
   Qed. 
   
   Fact sublist_app_inv_lft l1 r1 mm : l1++r1 <sl mm -> exists l2 r2, mm = l2++r2 /\ l1 <sl l2 /\ r1 <sl r2.
   Proof.
     revert l1 r1; induction mm as [ | x mm IH ]; simpl; intros l1 r1 H.
-    + rewrite sl_nil_inv in H.
-      destruct l1; destruct r1; try discriminate.
-      exists nil, nil; auto.
+    + sl inv H; destruct l1; destruct r1; try discriminate; exists nil, nil; auto.
     + destruct l1 as [ | y l1 ].
       * exists nil, (x::mm); auto.
-      * simpl in H; rewrite sl_cons_inv in H.
-        destruct H as [ (? & H) | H ]; subst.
+      * simpl in H; sl inv H. 
         - destruct (IH _ _ H) as (l2 & r2 & H1 & H2 & H3).
           exists (x::l2), r2; subst; auto.
-        - destruct (IH (y::l1) r1 H) as (l2 & r2 & H1 & H2 & H3).
+        - destruct (IH (_::_) _ H) as (l2 & r2 & H1 & H2 & H3).
           exists (x::l2), r2; subst; auto.
   Qed.
 
@@ -103,21 +129,13 @@ Section sublist.
     + exists nil, ll; auto.
     + destruct ll as [ | y ll ].
       * exists nil, nil; auto.
-      * simpl in H; rewrite sl_cons_inv in H.
-        destruct H as [ (? & H) | H ]; subst.
-        - destruct (IH _ H) as (l1 & r1 & H1 & H2 & H3).
-          exists (x::l1), r1; subst; auto.
-        - destruct (IH _ H) as (l1 & r1 & H1 & H2 & H3).
-          exists l1, r1; subst; auto.
+      * simpl in H; sl inv H; destruct (IH _ H) as (l1 & r1 & H1 & H2 & H3).
+        - exists (x::l1), r1; subst; auto.
+        - exists l1, r1; subst; auto.
   Qed.
 
   Fact sublist_cons_inv_rt ll x mm : ll <sl x::mm -> ll <sl mm \/ exists l', ll = x::l' /\ l' <sl mm.
-  Proof.
-    destruct ll; auto.
-    rewrite sl_cons_inv.
-    intros [[]|]; subst; auto.
-    right; firstorder.
-  Qed.
+  Proof. destruct ll; auto; intros H; sl inv H; right; firstorder. Qed.
   
   Fact sl_length ll mm : ll <sl mm -> length ll <= length mm.
   Proof. induction 1; simpl; auto; omega. Qed.
@@ -155,7 +173,7 @@ Section sublist.
       apply in_split in H2.
       destruct H2 as (l & m & H2); subst.
       exists l, (m++r); rewrite app_ass; simpl; split; auto.
-      apply sl_trans with (2 := sl_app_left _ _); auto.
+      apply sl_trans with (1 := H3); auto.
     * intros (? & ? & ? & ?); subst.
       apply sl_trans with (2 := sl_app_left _ _); auto.
   Qed.
@@ -185,13 +203,9 @@ Section sublist.
     simpl; intros H1; apply sl_length in H; omega.
   Qed.
 
-End sublist.
+End sublist_props.
 
-Infix "<sl" := (@sublist _) (at level 70).
-
-Hint Constructors sublist.
-
-Hint Resolve sl_refl sl_cons sl_app_left sl_app_right sl_app sl_snoc.
+Hint Resolve sl_app sl_snoc.
 
 Fact sublist_map X Y (f : X -> Y) l m : l <sl m -> map f l <sl map f m.
 Proof. induction 1; simpl; auto. Qed.
