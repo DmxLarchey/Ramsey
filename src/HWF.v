@@ -54,7 +54,7 @@ Section list_down.
     induction l as [ | x l IHl ]; intros m R; simpl.
     * split.
       + intros H k Hk.
-        apply sublist_nil_inv in Hk; subst; auto.
+        apply sl_nil_inv in Hk; subst; auto.
         simpl; rewrite <- app_nil_end; auto.
       + intros H; rewrite app_nil_end; apply (H nil); constructor.
     * do 2 rewrite IHl; split.

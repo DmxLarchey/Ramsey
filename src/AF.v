@@ -56,7 +56,7 @@ Section list_lift.
     * split.
       + exists nil; split; auto; constructor.
       + intros (l & H1 & H2).
-        apply sublist_nil_inv in H1; subst; auto.
+        rewrite sl_nil_inv in H1; subst; auto.
     * do 2 rewrite IHl; split.
       + intros [ (k & H1 & H2) | (k & H1 & H2) ].
         - exists k; split; auto; constructor; auto.

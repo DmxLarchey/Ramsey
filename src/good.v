@@ -158,7 +158,7 @@ Section good.
       do 2 (apply sl_trans with (2 := sl_app_left _ _); constructor).
       constructor.
     + intros (a & b & H1 & H2).
-      apply sl_cons_inv in H2.
+      apply sublist_cons_inv in H2.
       destruct H2 as (l & mm & H2 & H3).
       rewrite <- In_sl in H3.
       apply in_split in H3.
