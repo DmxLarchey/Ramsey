@@ -208,9 +208,68 @@ Section AF.
     Qed.
 
   End AF_bar_GOOD.
+
+  Inductive subseq : (nat -> X) -> list X -> Prop :=
+    | in_ss_0 : forall f, subseq f nil
+    | in_ss_1 : forall f l, subseq (fun n => f (S n)) l -> subseq f l
+    | in_ss_2 : forall f l, subseq (fun n => f (S n)) l -> subseq f (f 0::l).
+
+  Fact sl_subseq f l m : l <sl m -> subseq f m -> subseq f l.
+  Proof.
+    intros H1 H2; revert H2 l H1.
+    induction 1 as [ f | f m Hm IHm | f m Hm IHm ]; intros l Hl.
+    + apply sl_nil_inv in Hl; subst; constructor 1.
+    + constructor 2; auto.
+    + apply sublist_cons_inv_rt in Hl.
+      destruct Hl as [ Hl | (l' & -> & Hl) ].
+      * constructor 2; auto.
+      * constructor 3; auto.
+  Qed.
+
+  Fact pfx_subseq f n : subseq f (pfx f n).
+  Proof.
+    revert f; induction n; intros; simpl.
+     + constructor.
+     + constructor 3; auto.
+  Qed. 
+
+  Fact subseq_pfx_eq f l : subseq f l <-> exists n, l <sl pfx f n.
+  Proof.
+    split.
+    + induction 1 as [ f | f l Hl IHl | f l Hl IHl ].
+      * exists 0; constructor.
+      * destruct IHl as (n & Hn).
+        exists (S n); simpl; constructor 3; auto.
+      * destruct IHl as (n & Hn).
+        exists (S n); simpl; constructor 2; auto.
+    + intros (n & Hn).
+      apply sl_subseq with (1 := Hn).
+      apply pfx_subseq.
+  Qed.
+
+  Fact bar_GOOD_seq R : bar (GOOD R) nil -> forall f, exists l, subseq f l /\ GOOD R (rev l).
+  Proof.
+    intros H f.
+    apply bar_seq with (f := f) (n := 0) in H; auto.
+    destruct H as (k & _ & Hk); exists (rev (pfx_rev f k)); split; auto.
+    2: rewrite rev_involutive; auto.
+    clear Hk.
+    rewrite <- pfx_pfx_rev.
+    revert f; induction k as [ | k IHk ]; intros f; simpl.
+    + constructor.
+    + constructor 3; auto.
+  Qed.
   
   Corollary AF_bar_eq R : AF R <-> bar (GOOD R) nil.
   Proof. apply AF_bar_lift_eq with (l := nil). Qed.
+
+  Fact AF_seq R f : AF R -> exists l, subseq f l /\ GOOD R (rev l).
+  Proof.
+    intros H.
+    rewrite AF_bar_eq in H.
+    revert H f.
+    apply bar_GOOD_seq.
+  Qed.
 
   Corollary bar_list_lift R l : bar (GOOD R) l <-> bar (GOOD (R⇑l)) nil.
   Proof. rewrite <- AF_bar_lift_eq, AF_bar_eq; tauto. Qed.
@@ -236,7 +295,75 @@ Section AF.
       apply H; exists (rev m), p.
       rewrite rev_length; auto.
   Qed.
- 
+
+  Fact AF_seq_strict k R f : kary_strict k R -> AF R -> exists m, subseq f m /\ R m /\ length m = k.
+  Proof.
+    intros H1 H2.
+    apply AF_seq with (f := f) in H2.
+    destruct H2 as (l & H2 & H3).
+    rewrite GOOD_kary_strict with (1 := H1) in H3.
+    destruct H3 as (m & H3 & H4 & H5).
+    exists (rev m); rewrite rev_length; repeat split; auto.
+    revert H2; apply sl_subseq.
+    rewrite <- (rev_involutive l).
+    apply sl_rev; auto.
+  Qed.
+
+  Fact sl_pfx_cst (x : X) l n : l <sl pfx (fun _ => x) n -> Forall (eq x) l.
+  Proof.
+    revert l; induction n as [ | n IHn ]; intros l H.
+    + apply sl_nil_inv in H; subst; constructor.
+    + simpl in H.
+      apply sublist_cons_inv_rt in H.
+      destruct H as [ H | (l' & -> & H) ]; auto.
+  Qed.
+
+  (* There is ONLY ONE unary strict AF relation, up to extentionality of course *)
+
+  Fact AF_unary_strict R : kary_strict 1 R -> AF R -> forall l, R l <-> l <> nil.
+  Proof.
+    intros H1 H2.
+    assert (H3 : forall x, R (x::nil)).
+    { intros x.
+      destruct AF_seq_strict with (1 := H1) (2 := H2) (f := fun _ : nat => x)
+        as (m & H3 & H4 & H5).
+      rewrite subseq_pfx_eq in H3.
+      destruct H3 as (n & Hn).
+      destruct m as [ | u [ | ? ? ] ]; try discriminate.
+      assert (E : u = x).
+      { clear H4 H5.
+        apply sl_pfx_cst in Hn.
+        inversion Hn; auto. }
+      subst; auto. }
+    simpl in H1; destruct H1 as (H0 & H1).
+    intros [ | x l ].
+    + split; tauto.
+    + rewrite H1; split; auto; discriminate.
+  Qed.
+
+  Fact AF_unary R : kary 1 R -> AF R -> forall x, R (x::nil).
+  Proof.
+    intros H1 H2 x.
+    apply AF_seq with (f := fun _ => x) in H2.
+    destruct H2 as (l & H2 & H3).
+    simpl in H1.
+    red in H3.
+    destruct (H3 (x::nil)) as (k & H4 & H5); auto.
+    clear H3.
+    apply sl_rev in H4.
+    rewrite rev_involutive in H4.
+    revert H4 H5; generalize (rev k); clear k; intros k H4 H5.
+    destruct k as [ | y k ]; auto.
+    assert (Hy : y = x).
+    { apply sl_subseq with (1 := H4) in H2.
+      apply subseq_pfx_eq in H2.
+      destruct H2 as (n & H2).
+      apply sl_pfx_cst in H2.
+      inversion H2; auto. }
+    subst.
+    simpl in H5; apply H1 in H5; auto.
+  Qed.
+
 End AF.
 
 

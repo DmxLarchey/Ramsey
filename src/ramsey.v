@@ -9,7 +9,7 @@
 
 Require Import List Arith Omega Wellfounded.
 
-Require Import notations ramsey_paper af.
+Require Import notations ramsey_lattice af HWF.
 
 Set Implicit Arguments.
 
@@ -17,6 +17,8 @@ Local Notation "A ⊆ B" := (∀x, A x -> B x).
 Local Notation "A ⊇ B" := (∀x, B x -> A x).
 Local Notation "A ∩ B" := (fun z => A z /\ B z).
 Local Notation "A ∪ B" := (fun z => A z \/ B z).
+
+(** Check theses defs ... there is a mess arround l++x::nil <~~> x::l **)
 
 Local Notation "R ⋅ x" := (fun l => R (x::l)).
 Local Notation "R ↓ x" := (fun l => R l /\ R (x::l)).
@@ -49,10 +51,11 @@ Section Ramsey_Berardi_Coquand.
 
   (* HWF is an instance of Ultimately Least *)
 
-  Local Fact HWF_UL R : HWF R <-> UF (fun R S => R ⊇ S) (fun R S => R ∩ S) 
+  Local Fact HWF_UL R : HWF R <-> UL (fun R S => R ⊇ S) (fun R S => R ∩ S) 
                                      (fun _ => False) (fun a R => R⋅a) R.
   Proof.
-    split; (induction 1; [ constructor 1 | constructor 2 ]; auto); unfold lattice_eq in *; tauto.
+    split; (induction 1; [ constructor 1 | constructor 2 ]; auto); unfold lattice_eq in *; try tauto.
+    + simpl; unfold lift.
   Qed.
 
   (* Almost Full is an instance of Ultimately Greatest (ie least for ⊇) *)

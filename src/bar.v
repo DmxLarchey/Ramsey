@@ -15,6 +15,47 @@ Set Implicit Arguments.
 
 Local Notation "A ⊆ B" := (∀x, A x -> B x).
 
+Section prefix.
+
+  Variable X : Type.
+ 
+  Implicit Type (f : nat -> X).
+
+  Fixpoint pfx_rev f n :=
+    match n with 
+      | 0   => nil
+      | S n => f n :: pfx_rev f n
+    end.
+
+  Fact pfx_rev_add f a b : pfx_rev f (a+b) = pfx_rev (fun n => f (n+b)) a ++ pfx_rev f b.
+  Proof. revert f; induction a; intros f; simpl; f_equal; auto. Qed.
+
+  Fact pfx_rev_ext f g n : (forall i, i < n -> f i = g i) -> pfx_rev f n = pfx_rev g n.
+  Proof. induction n; intros H; simpl; f_equal; auto. Qed.
+
+  Fixpoint pfx f n :=
+    match n with
+      | 0   => nil
+      | S n => f 0 :: pfx (fun n => f (S n)) n
+    end.
+
+  Fact pfx_add f a b : pfx f (a+b) = pfx f a ++ pfx (fun n => f (a+n)) b.
+  Proof.
+    revert f; induction a as [ | a IHa ]; intros f; simpl; f_equal; auto; apply IHa.
+  Qed.
+   
+  Fact pfx_pfx_rev f n : pfx f n = rev (pfx_rev f n).
+  Proof.
+    revert f; induction n as [ | n IHn ]; intros f; auto.
+    replace (S n) with (n+1) at 2 by omega.
+    rewrite pfx_rev_add; simpl.
+    rewrite rev_app_distr; simpl; f_equal.
+    rewrite IHn; f_equal.
+    apply pfx_rev_ext; intros; f_equal; omega.
+  Qed.
+
+End prefix.
+
 Section bar.
 
   Variable (X : Type).
@@ -30,6 +71,14 @@ Section bar.
 
   Fact bar_inv P l : bar P l -> P l \/ (forall x, bar P (x::l)).
   Proof. induction 1; auto. Qed.
+
+  Fact bar_seq P l : bar P l -> forall f n, l = pfx_rev f n -> exists k, n <= k /\ P (pfx_rev f k).
+  Proof.
+    induction 1 as [ l Hl | l Hl IHl ]; intros f n Hn.
+    + exists n; subst; auto.
+    + subst; destruct (IHl _ _ (S n) eq_refl) as (x & H1 & H2).
+      exists x; split; auto; omega.
+  Qed.
 
   Section bar_lift.
 
